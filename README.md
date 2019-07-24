@@ -21,6 +21,7 @@
     - [回到同步的世界](#回到同步的世界)
 - [调度器](#调度器)
 - [消息处理](#消息处理)
+- [“懒”和“急”](#“懒”和“急”)
 - [参考内容](#参考内容)
 ### 反应式编程介绍
 ```Webflux``` 使用 [Reactor](https://projectreactor.io/docs) 进行反应式编程，java的反应式编程库还有 [Rxjava](https://github.com/ReactiveX/RxJava) 和 [Rxjava2](https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0) 。
@@ -904,9 +905,18 @@ n个 Monos 的元素都发出来后组成一个 Tuple：Mono#zip
 #### 回到同步的世界
 ### 调度器
 ### 消息处理
+### “懒”和“急”
+```Reactor sources``` 有懒和急的区别。```just``` 是急，```defer``` 是懒。像 ```Http``` 请求，应该要懒处理。
+
+比如调用 ```Mono.just(System.currentTimeMillis())``` 会立即调用 ```System.currentTimeMillis())```,并且立即
+计算结果，结果已经计算完毕，多次订阅，最终得到的结果是一样的。
+```java
+```
+
 ### 参考文章
 本文参考了以下内容
 - [Reactor文档](https://projectreactor.io/learn)
 - [使用 Reactor 进行反应式编程](https://www.ibm.com/developerworks/cn/java/j-cn-with-reactor-response-encode/index.html)
 - [响应式Spring的道法术器（Spring WebFlux 教程）](https://blog.csdn.net/get_set/article/details/79466657)
 - [Introduction to Reactive Programming](https://tech.io/playgrounds/929/reactive-programming-with-reactor-3/Intro)
+- [what does Mono.defer() do?](https://stackoverflow.com/questions/55955567/what-does-mono-defer-do)

@@ -4,21 +4,30 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class Part01CreateInstance {
     private String getFoo() {
-        System.out.println(" 获取 Foo ");
+        Logger logger = Logger.getLogger("Foo");
+        logger.info("flux:callable task executor: " + Thread.currentThread().getName() + " | foo" );
         return "foo";
     }
 
+    private String[]  getArray(){
+        Logger logger = Logger.getLogger("Array");
+        String[] array = {"one", "two", "three"};
+        logger.info(Arrays.toString(array));
+        return array;
+    }
     /**
      * 使用 ${@link Mono#just(Object)} 发出一个T
      */
@@ -30,7 +39,7 @@ public class Part01CreateInstance {
      * 使用 ${@link Mono#justOrEmpty(Object)} }  基于一个${@link java.util.Optional}发出一个T
      */
     Mono<String> fooOptionalMono() {
-        return Mono.justOrEmpty(Optional.of("foo"));
+        return Mono.justOrEmpty(Optional.of(getFoo()));
     }
 
     /**
@@ -45,7 +54,7 @@ public class Part01CreateInstance {
      * 使用 ${@link Mono#justOrEmpty(Object)} }  基于一个${@link Object}发出一个可能为空的T
      */
     Mono<String> fooJustEmptyMono() {
-        return Mono.justOrEmpty("foo");
+        return Mono.justOrEmpty(getFoo());
     }
 
     /**
@@ -59,7 +68,7 @@ public class Part01CreateInstance {
      * 使用 ${@link Mono#fromSupplier(Supplier) }  发出一个T ，懒创建
      */
     Mono<String> fooMonoSupplier() {
-        return Mono.fromSupplier(() -> "foo");
+        return Mono.fromSupplier(() -> getFoo());
     }
 
 
@@ -67,46 +76,44 @@ public class Part01CreateInstance {
      * 使用 ${@link Flux#just(Object) }  发出多个T
      */
     Flux<String> justFlux() {
-        return Flux.just("one", "two", "three");
+        return Flux.just(getArray());
     }
 
     /**
      * 使用 ${@link Flux#fromArray(Object[]) }  基于数组发出Flux
      */
-    Flux<String> FluxFromArray() {
-        String[] array = {"one", "two", "three"};
-        return Flux.fromArray(array);
+    Flux<String> fluxFromArray() {
+        return Flux.fromArray(getArray());
     }
 
     /**
      * 使用 ${@link Flux#fromIterable(Iterable) }  基于Iterable发出Flux
      */
-    Flux<String> FluxFromIterable() {
-        List<String> list = Arrays.asList(new String[]{"one", "two"});
-        return Flux.fromIterable(list);
+    Flux<String> fluxFromIterable() {
+        return Flux.fromIterable(Arrays.asList(getArray()));
     }
 
     /**
      * 使用 ${@link Flux#range(int, int) }  发出指定范围的Flux
      */
-    Flux<Integer> FluxRange() {
+    Flux<Integer> fluxRange() {
         return Flux.range(1, 10);
     }
 
     /**
      * 使用 ${@link Flux#fromStream(Stream) }  基于Stream发出Flux
      */
-    Flux<String> FluxFromStream() {
-        return Flux.fromStream(Stream.of("one", "two", "three"));
+    Flux<String> fluxFromStream() {
+        return Flux.fromStream(Stream.of(getArray()));
     }
 
     /**
      * 使用 ${@link Mono#fromCallable(Callable) }  基于任务发出Mono
      */
-    Mono<String> MonoFromCallable() {
+    Mono<String> monoFromCallable() {
         Callable<String> task = () -> {
             System.out.println("flux:callable task executor: " + Thread.currentThread().getName());
-            return "foo";
+            return getFoo();
         };
         return Mono.fromCallable(task);
     }
@@ -114,7 +121,7 @@ public class Part01CreateInstance {
     /**
      * 使用 ${@link Mono#fromRunnable(Runnable) }  基于任务发出Mono
      */
-    Mono<String> MonoFromRunnable() {
+    Mono<String> monoFromRunnable() {
         return Mono.fromRunnable(() -> {
             System.out.println("flux:callable task executor: " + Thread.currentThread().getName());
         });
@@ -123,13 +130,13 @@ public class Part01CreateInstance {
     /**
      * 使用 ${@link Mono#fromFuture(CompletableFuture)}  基于CompletableFuture发出Mono
      */
-    Mono<String> MonoFromFuture() {
+    Mono<String> monoFromFuture() {
         Executor executor = Executors.newFixedThreadPool(Math.min(1, 100), r -> {
             Thread thread = new Thread(r);
             thread.setDaemon(true);
             return thread;
         });
-        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "foo", executor);
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> getFoo(), executor);
         return Mono.fromFuture(future);
     }
 
@@ -181,15 +188,52 @@ public class Part01CreateInstance {
      * 使用 ${@link Mono#defer(Supplier)}  }  发出一个T ，懒创建
      */
     Mono<String> fooMonoDefer() {
-        return Mono.defer(() -> Mono.just(getFoo()));
+        return Mono.defer( () -> Mono.just(getFoo()));
     }
 
     /**
      * 使用 ${@link Flux#defer(Supplier)}  }  发出T ，懒创建
      */
     Flux<String> fooFluxDefer() {
+        return Flux.defer(() -> Flux.just(getArray()));
+    }
+
+    /**
+     * 使用 ${@link Mono#using(Callable, Function, Consumer) }  基于可回收资源发出T ，
+     */
+    Flux<String> fooMonoUsing() {
         return Flux.defer(() -> Mono.just(getFoo()));
     }
+
+    /**
+     * 使用 ${@link Flux#using(Callable, Function, Consumer) }  基于可回收资源发出T ，
+     */
+    Flux<String> fooFluxUsing() {
+        return Flux.defer(() -> Mono.just(getFoo()));
+    }
+
+    /**
+     * 使用 ${@link Flux#generate(Consumer)} 可编程的生成事件，一个接一个 ，
+     */
+    Flux<String> fooFluxGeneerate() {
+        return Flux.defer(() -> Mono.just(getFoo()));
+    }
+
+    /**
+     * 使用 ${@link Mono#create(Consumer)} 异步发出T ，
+     */
+    Flux<String> fooMonoCreate() {
+        return Flux.defer(() -> Mono.just(getFoo()));
+    }
+
+    /**
+     * 使用 ${@link Flux#create(Consumer)} 异步发出T ，
+     */
+    Flux<String> fooFluxCreate() {
+        return Flux.defer(() -> Mono.just(getFoo()));
+    }
+
+
 
 
 }
