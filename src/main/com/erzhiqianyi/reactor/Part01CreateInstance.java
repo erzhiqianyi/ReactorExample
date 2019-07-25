@@ -224,7 +224,7 @@ public class Part01CreateInstance {
      * 使用 ${@link Mono#create(Consumer)} 异步发出T ，
      */
     Flux<String> fooMonoCreate() {
-        
+
         return Flux.defer(() -> Mono.just(getFoo()));
     }
 

@@ -623,25 +623,31 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 ```Reactor Steam```作为一种，和 java8 中的 ```Stream``` 类似，提供了很多操作符，方便对流进行操作。
 操作符实践，可以参考官方提供的 [lite-rx-api-hands-on](https://github.com/reactor/lite-rx-api-hands-on/tree/master/src/test/java/io/pivotal/literx), 完成里面的todo ,然会执行test。
 #### 创建序列
+
 - 发出一个 T，已经有数据
-![](svg/just.svg)
- ```java 
+```java 
 	public static <T> Mono<T> just(T data) {
 		return onAssembly(new MonoJust<>(data));
 	}
 ```
+![](svg/just.svg)
+
 - 基于一个 Optional<T>
-  ```java
+```java
   	public static <T> Mono<T> justOrEmpty(@Nullable Optional<? extends T> data) {
 		return data != null && data.isPresent() ? just(data.get()) : empty();
 	}
-  ```
+```
+![](svg/justOrEmpty.svg)
+
 - 基于一个可能为 null 的 T
  ```java
 	public static <T> Mono<T> justOrEmpty(@Nullable Optional<? extends T> data) {
 		return data != null && data.isPresent() ? just(data.get()) : empty();
 	}
  ```
+![](svg/justOrEmpty.svg)
+
 - 发出一个 T，且还是由 just 方法返回, 但是“懒”创建的 
  ```java
 	public static <T> Mono<T> fromSupplier(Supplier<? extends T> supplier) {
@@ -649,15 +655,16 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 	}
 
  ```
- ```java
-    Mono.defer(Mono.just(T))
- ```
+![](svg/fromSupplier.svg)
+
 - 发出许多 T，可以明确列举出来
  ```java
  	public static <T> Flux<T> just(T... data) {
 		return fromArray(data);
 	}
  ```
+ ![](svg/justMultiple.svg)
+
 - 一个数组
  ```java
  	public static <T> Flux<T> fromArray(T[] array) {
@@ -671,12 +678,16 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 	}
 
  ```
+ ![](svg/fromArray.svg)
+
 - 一个集合或 iterable
  ```java
  	public static <T> Flux<T> fromIterable(Iterable<? extends T> it) {
 		return onAssembly(new FluxIterable<>(it));
 	}
  ```
+ ![](svg/fromIterable.svg)
+
 - 一个 Integer 的 range
 ```java
 	public static Flux<Integer> range(int start, int count) {
@@ -689,6 +700,8 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 		return onAssembly(new FluxRange(start, count));
 	}
 ```
+![](svg/range.svg)
+
 - 一个 Stream 提供给每一个订阅
 ```java
 	public static <T> Flux<T> fromStream(Stream<? extends T> s) {
@@ -697,41 +710,41 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 	}
 
 ```
-- 一个 Supplier<T> 
-```java
-	public static <T> Mono<T> fromSupplier(Supplier<? extends T> supplier) {
-		return onAssembly(new MonoSupplier<>(supplier));
-	}
+![](svg/fromStream.svg)
 
-```
 - 一个任务
 ```java
 	public static <T> Mono<T> fromCallable(Callable<? extends T> supplier) {
 		return onAssembly(new MonoCallable<>(supplier));
 	}
 
-    public static <T> Mono<T> fromRunnable(Runnable runnable) {
+	public static <T> Mono<T> fromRunnable(Runnable runnable) {
 		return onAssembly(new MonoRunnable<>(runnable));
 	}
-
 ```
+![](svg/fromCallable.svg)
+![](svg/fromRunnable.svg)
 
 - 一个 CompletableFuture<T>
 ```java
 	public static <T> Mono<T> fromFuture(CompletableFuture<? extends T> future) {
 		return onAssembly(new MonoCompletionStage<>(future));
 	}
-k
 ```
+![](svg/fromFuture.svg)
+
 - 直接完成：empty
 ```java
 	public static <T> Mono<T> empty() {
 		return MonoEmpty.instance();
 	}
-    public static <T> Flux<T> empty() {
+
+	public static <T> Flux<T> empty() {
 		return FluxEmpty.instance();
 	}
 ```
+![](svg/empty.svg)
+
 - 立即生成错误
 ```java
     public static <T> Mono<T> error(Throwable error) {
@@ -742,18 +755,23 @@ k
 		return error(error, false);
 	}
 ```
+![](svg/error.svg)
+
 - 什么都不做：never
 ```java
 	public static <T> Mono<T> never() {
 		return MonoNever.instance();
 	}
 
-    public static <T> Flux<T> never() {
+	public static <T> Flux<T> never() {
 		return FluxNever.instance();
 	}
 
 ```
+![](svg/never.svg)
+
 - 订阅时才决定：defer
+
 ```java
 	public static <T> Mono<T> defer(Supplier<? extends Mono<? extends T>> supplier) {
 		return onAssembly(new MonoDefer<>(supplier));
@@ -764,6 +782,10 @@ k
 	}
 
 ```
+
+![](svg/deferForMono.svg)
+![](svg/deferForFlux.svg)
+
 - 依赖一个可回收的资源：using
 ```java
 	public static <T, D> Mono<T> using(Callable<? extends D> resourceSupplier,
@@ -780,6 +802,9 @@ k
 	}
 
 ```
+![](svg/usingForMono.svg)
+![](svg/usingForFlux.svg)
+
 - 可编程地生成事件（可以使用状态）: 
 ```java
 	public static <T> Flux<T> generate(Consumer<SynchronousSink<T>> generator) {
@@ -788,16 +813,20 @@ k
 	}
 
 ```
+![](/svg/generateStateless.svg)
+
 - 异步（也可同步）的，每次尽可能多发出元素：
 ```java
-    public static <T> Mono<T> create(Consumer<MonoSink<T>> callback) {
+	public static <T> Mono<T> create(Consumer<MonoSink<T>> callback) {
 	    return onAssembly(new MonoCreate<>(callback));
 	}
 
-    public static <T> Flux<T> create(Consumer<? super FluxSink<T>> emitter) {
+	public static <T> Flux<T> create(Consumer<? super FluxSink<T>> emitter) {
 	    return create(emitter, OverflowStrategy.BUFFER);
     }
 ```
+
+![](svg/createForFlux.svg)
 #### 转换序列
 - 1对1地转化（比如字符串转化为它的长度）
 ```java
