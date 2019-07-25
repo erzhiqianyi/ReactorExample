@@ -197,6 +197,12 @@ public class Part01CreateInstanceTest {
 
     @Test
     public void fooFluxDefer() {
+        Flux<String> flux = part01CreateInstance.fooFluxDefer().log();
+        StepVerifier
+                .create(flux)
+                .expectNext("one", "two", "three")
+                .verifyComplete();
+
     }
 
     @Test
@@ -220,22 +226,40 @@ public class Part01CreateInstanceTest {
     }
 
     @Test
-    public void deferVsJust() throws InterruptedException {
+    public void just() throws InterruptedException {
         Mono<Long> clock = Mono.just(System.currentTimeMillis());
-        clock.subscribe(System.out::println);
+        clock.log().subscribe(System.out::println);
         //time == t0
 
-        Thread.sleep(10_000);
+        Thread.sleep(1_000);
         //time == t10
-        clock.subscribe(System.out::println);
+        clock.log().subscribe(System.out::println);
         clock.block(); //we use block for demonstration purposes, returns t0
 
         clock.subscribe(System.out::println);
-        Thread.sleep(7_000);
+        Thread.sleep(2_000);
         //time == t17
-        clock.subscribe(System.out::println);
+        clock.log().subscribe(System.out::println);
 
         clock.block(); //we re-subscribe to clock, still returns t0
+        clock.log().subscribe(System.out::println);
+
+    }
+
+    @Test
+    public void defer() throws InterruptedException {
+        Mono<Long> clock = Mono.defer(() -> Mono.just(System.currentTimeMillis()));
+        //time == t0
+
         clock.subscribe(System.out::println);
+        Thread.sleep(1_000);
+        //time == t10
+        clock.block(); //invoked currentTimeMillis() here and returns t10
+        clock.log().subscribe(System.out::println);
+
+        Thread.sleep(2_000);
+        //time == t17
+        clock.block(); //invoke currentTimeMillis() once again here and returns t17
+        clock.log().subscribe(System.out::println);
     }
 }

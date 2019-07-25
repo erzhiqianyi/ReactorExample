@@ -155,8 +155,9 @@ public class Part01FluxTest {
 ```
 
 ### 创建Mono
-![Flux](https://github.com/erzhiqianyi/yitian-blog/blob/master/image/mono.png?raw=true)
+![Mono](https://github.com/erzhiqianyi/yitian-blog/blob/master/image/mono.png?raw=true)
 
+[Mono](https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html)
 使用静态方法生成Mono
 - just()
     创建一个元素后立即结束   
@@ -623,11 +624,12 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 操作符实践，可以参考官方提供的 [lite-rx-api-hands-on](https://github.com/reactor/lite-rx-api-hands-on/tree/master/src/test/java/io/pivotal/literx), 完成里面的todo ,然会执行test。
 #### 创建序列
 - 发出一个 T，已经有数据
-   ```java 
-   	public static <T> Mono<T> just(T data) {
+![](svg/just.svg)
+ ```java 
+	public static <T> Mono<T> just(T data) {
 		return onAssembly(new MonoJust<>(data));
 	}
-   ```
+```
 - 基于一个 Optional<T>
   ```java
   	public static <T> Mono<T> justOrEmpty(@Nullable Optional<? extends T> data) {
@@ -911,8 +913,48 @@ n个 Monos 的元素都发出来后组成一个 Tuple：Mono#zip
 比如调用 ```Mono.just(System.currentTimeMillis())``` 会立即调用 ```System.currentTimeMillis())```,并且立即
 计算结果，结果已经计算完毕，多次订阅，最终得到的结果是一样的。
 ```java
+    @Test
+    public void just() throws InterruptedException {
+        Mono<Long> clock = Mono.just(System.currentTimeMillis());
+        clock.subscribe(System.out::println);
+        //time == t0
+
+        Thread.sleep(1_000);
+        //time == t10
+        clock.subscribe(System.out::println);
+        clock.block(); //we use block for demonstration purposes, returns t0
+
+        clock.subscribe(System.out::println);
+        Thread.sleep(7_000);
+        //time == t17
+        clock.subscribe(System.out::println);
+
+        clock.block(); //we re-subscribe to clock, still returns t0
+        clock.subscribe(System.out::println);
+
+    }
+
 ```
 
+```defer``` 则不同，不会立即计算，有订阅者时才会计算，每增加一个新的订阅者，都会重新计算一次。
+```java
+    @Test
+    public void defer() throws InterruptedException {
+        Mono<Long> clock = Mono.defer(() -> Mono.just(System.currentTimeMillis()));
+        //time == t0
+
+        clock.subscribe(System.out::println);
+        Thread.sleep(1_000);
+        //time == t10
+        clock.block(); //invoked currentTimeMillis() here and returns t10
+        clock.subscribe(System.out::println);
+
+        Thread.sleep(7_000);
+        //time == t17
+        clock.block(); //invoke currentTimeMillis() once again here and returns t17
+        clock.subscribe(System.out::println);
+    }
+```
 ### 参考文章
 本文参考了以下内容
 - [Reactor文档](https://projectreactor.io/learn)
@@ -920,3 +962,4 @@ n个 Monos 的元素都发出来后组成一个 Tuple：Mono#zip
 - [响应式Spring的道法术器（Spring WebFlux 教程）](https://blog.csdn.net/get_set/article/details/79466657)
 - [Introduction to Reactive Programming](https://tech.io/playgrounds/929/reactive-programming-with-reactor-3/Intro)
 - [what does Mono.defer() do?](https://stackoverflow.com/questions/55955567/what-does-mono-defer-do)
+- [Reactor Core ](https://projectreactor.io/docs/core/release/api/overview-summary.html)

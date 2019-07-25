@@ -1,5 +1,6 @@
 package com.erzhiqianyi.reactor;
 
+import javafx.util.Callback;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -223,6 +224,7 @@ public class Part01CreateInstance {
      * 使用 ${@link Mono#create(Consumer)} 异步发出T ，
      */
     Flux<String> fooMonoCreate() {
+        
         return Flux.defer(() -> Mono.just(getFoo()));
     }
 
