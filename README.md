@@ -12,6 +12,21 @@
     - [日志记录](#日志记录)
 - [操作符](#操作符)
     - [创建序列](#创建序列)
+		- [just](#just)
+		- [justOrEmpty](#justOrEmpty)
+		- [fromArray](#fromArray)
+		- [fromSupplier](#fromSupplier)
+		- [range](#range)
+		- [fromStream](#fromStream)
+		- [fromCallable](#fromCallable)
+		- [fromRunnable](#fromRunnable)
+		- [fromFuture](#fromFuture)
+		- [empty](#empty)
+		- [error](#error)
+		- [defer](#defer)
+		- [using](#using)
+		- [generate](#generate)
+		- [create](#create)
     - [转换序列](#转换序列)
     - [只读序列](#只读序列)
     - [过虑序列](#过虑序列)
@@ -624,6 +639,7 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 操作符实践，可以参考官方提供的 [lite-rx-api-hands-on](https://github.com/reactor/lite-rx-api-hands-on/tree/master/src/test/java/io/pivotal/literx), 完成里面的todo ,然会执行test。
 #### 创建序列
 
+#####  just
 - 发出一个 T，已经有数据
 ```java 
 	public static <T> Mono<T> just(T data) {
@@ -631,31 +647,6 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 	}
 ```
 ![](svg/just.svg)
-
-- 基于一个 Optional<T>
-```java
-  	public static <T> Mono<T> justOrEmpty(@Nullable Optional<? extends T> data) {
-		return data != null && data.isPresent() ? just(data.get()) : empty();
-	}
-```
-![](svg/justOrEmpty.svg)
-
-- 基于一个可能为 null 的 T
- ```java
-	public static <T> Mono<T> justOrEmpty(@Nullable Optional<? extends T> data) {
-		return data != null && data.isPresent() ? just(data.get()) : empty();
-	}
- ```
-![](svg/justOrEmpty.svg)
-
-- 发出一个 T，且还是由 just 方法返回, 但是“懒”创建的 
- ```java
-	public static <T> Mono<T> fromSupplier(Supplier<? extends T> supplier) {
-		return onAssembly(new MonoSupplier<>(supplier));
-	}
-
- ```
-![](svg/fromSupplier.svg)
 
 - 发出许多 T，可以明确列举出来
  ```java
@@ -665,7 +656,35 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
  ```
  ![](svg/justMultiple.svg)
 
-- 一个数组
+
+##### justOrEmpty 
+基于一个 Optional<T>
+```java
+  	public static <T> Mono<T> justOrEmpty(@Nullable Optional<? extends T> data) {
+		return data != null && data.isPresent() ? just(data.get()) : empty();
+	}
+```
+![](svg/justOrEmpty.svg)
+
+基于一个可能为 null 的 T
+ ```java
+	public static <T> Mono<T> justOrEmpty(@Nullable Optional<? extends T> data) {
+		return data != null && data.isPresent() ? just(data.get()) : empty();
+	}
+ ```
+![](svg/justOrEmpty.svg)
+#####  fromSupplier
+- 发出一个 T，且还是由 just 方法返回, 但是“懒”创建的 
+ ```java
+	public static <T> Mono<T> fromSupplier(Supplier<? extends T> supplier) {
+		return onAssembly(new MonoSupplier<>(supplier));
+	}
+
+ ```
+![](svg/fromSupplier.svg)
+
+##### fromArray
+- 基于一个数组发出T
  ```java
  	public static <T> Flux<T> fromArray(T[] array) {
 		if (array.length == 0) {
@@ -680,15 +699,17 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
  ```
  ![](svg/fromArray.svg)
 
-- 一个集合或 iterable
+##### fromIterable
+-  基于一个集合或 iterable 发出 T 
  ```java
  	public static <T> Flux<T> fromIterable(Iterable<? extends T> it) {
-		return onAssembly(new FluxIterable<>(it));
-	}
+			return onAssembly(new FluxIterable<>(it));
+		}
  ```
  ![](svg/fromIterable.svg)
 
-- 一个 Integer 的 range
+##### range
+- 一个 Integer 的 range,发出指定范围内的数字 
 ```java
 	public static Flux<Integer> range(int start, int count) {
 		if (count == 1) {
@@ -702,6 +723,7 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 ```
 ![](svg/range.svg)
 
+##### fromStream
 - 一个 Stream 提供给每一个订阅
 ```java
 	public static <T> Flux<T> fromStream(Stream<? extends T> s) {
@@ -712,19 +734,26 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 ```
 ![](svg/fromStream.svg)
 
-- 一个任务
+##### fromCallable
+- 基于任务结果发出T
 ```java
 	public static <T> Mono<T> fromCallable(Callable<? extends T> supplier) {
 		return onAssembly(new MonoCallable<>(supplier));
 	}
 
+
+```
+![](svg/fromCallable.svg)
+##### fromRunnable 
+- 执行任务，没有返回结果 
+```java
 	public static <T> Mono<T> fromRunnable(Runnable runnable) {
 		return onAssembly(new MonoRunnable<>(runnable));
 	}
 ```
-![](svg/fromCallable.svg)
 ![](svg/fromRunnable.svg)
 
+##### fromFuture
 - 一个 CompletableFuture<T>
 ```java
 	public static <T> Mono<T> fromFuture(CompletableFuture<? extends T> future) {
@@ -733,7 +762,8 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 ```
 ![](svg/fromFuture.svg)
 
-- 直接完成：empty
+##### empty
+- 直接完成
 ```java
 	public static <T> Mono<T> empty() {
 		return MonoEmpty.instance();
@@ -745,6 +775,7 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 ```
 ![](svg/empty.svg)
 
+##### error
 - 立即生成错误
 ```java
     public static <T> Mono<T> error(Throwable error) {
@@ -770,7 +801,8 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 ```
 ![](svg/never.svg)
 
-- 订阅时才决定：defer
+##### defer
+- 订阅时才计算
 
 ```java
 	public static <T> Mono<T> defer(Supplier<? extends Mono<? extends T>> supplier) {
@@ -785,8 +817,8 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 
 ![](svg/deferForMono.svg)
 ![](svg/deferForFlux.svg)
-
-- 依赖一个可回收的资源：using
+##### using
+- 依赖一个可回收的资源,先获取资源，再用资源生成发布者，然后清理资源
 ```java
 	public static <T, D> Mono<T> using(Callable<? extends D> resourceSupplier,
 			Function<? super D, ? extends Mono<? extends T>> sourceSupplier,
@@ -805,6 +837,7 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 ![](svg/usingForMono.svg)
 ![](svg/usingForFlux.svg)
 
+##### generate
 - 可编程地生成事件（可以使用状态）: 
 ```java
 	public static <T> Flux<T> generate(Consumer<SynchronousSink<T>> generator) {
@@ -814,7 +847,7 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 
 ```
 ![](/svg/generateStateless.svg)
-
+##### create
 - 异步（也可同步）的，每次尽可能多发出元素：
 ```java
 	public static <T> Mono<T> create(Consumer<MonoSink<T>> callback) {

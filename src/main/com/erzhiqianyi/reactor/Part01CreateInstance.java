@@ -1,10 +1,11 @@
 package com.erzhiqianyi.reactor;
 
-import javafx.util.Callback;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import com.erzhiqianyi.reactor.domain.ResourceLoader;
+import com.erzhiqianyi.reactor.domain.User;
+import reactor.core.publisher.*;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -19,22 +20,31 @@ import java.util.stream.Stream;
 public class Part01CreateInstance {
     private String getFoo() {
         Logger logger = Logger.getLogger("Foo");
-        logger.info("flux:callable task executor: " + Thread.currentThread().getName() + " | foo" );
+        logger.info("flux:callable task executor: " + Thread.currentThread().getName() + " | foo");
         return "foo";
     }
 
-    private String[]  getArray(){
+    private String[] getArray() {
         Logger logger = Logger.getLogger("Array");
         String[] array = {"one", "two", "three"};
         logger.info(Arrays.toString(array));
         return array;
     }
+
     /**
      * 使用 ${@link Mono#just(Object)} 发出一个T
      */
-    Mono<String> fooMono() {
+    Mono<String> justMono() {
         return Mono.just(getFoo());
     }
+
+    /**
+     * 使用 ${@link Flux#just(Object) }  发出多个T
+     */
+    Flux<String> justFlux() {
+        return Flux.just(getArray());
+    }
+
 
     /**
      * 使用 ${@link Mono#justOrEmpty(Object)} }  基于一个${@link java.util.Optional}发出一个T
@@ -72,13 +82,6 @@ public class Part01CreateInstance {
         return Mono.fromSupplier(() -> getFoo());
     }
 
-
-    /**
-     * 使用 ${@link Flux#just(Object) }  发出多个T
-     */
-    Flux<String> justFlux() {
-        return Flux.just(getArray());
-    }
 
     /**
      * 使用 ${@link Flux#fromArray(Object[]) }  基于数组发出Flux
@@ -189,7 +192,7 @@ public class Part01CreateInstance {
      * 使用 ${@link Mono#defer(Supplier)}  }  发出一个T ，懒创建
      */
     Mono<String> fooMonoDefer() {
-        return Mono.defer( () -> Mono.just(getFoo()));
+        return Mono.defer(() -> Mono.just(getFoo()));
     }
 
     /**
@@ -202,40 +205,57 @@ public class Part01CreateInstance {
     /**
      * 使用 ${@link Mono#using(Callable, Function, Consumer) }  基于可回收资源发出T ，
      */
-    Flux<String> fooMonoUsing() {
-        return Flux.defer(() -> Mono.just(getFoo()));
+    Mono<User> fooMonoUsing() {
+        return Mono.using(() -> new ResourceLoader(), // 第一个参数获取资源
+                resource -> Mono.just(resource.getFirst()),
+                ResourceLoader::clean   // 第三个参数最终清理资源 // 第二个参数利用资源生成数据流
+        );
     }
 
     /**
      * 使用 ${@link Flux#using(Callable, Function, Consumer) }  基于可回收资源发出T ，
      */
-    Flux<String> fooFluxUsing() {
-        return Flux.defer(() -> Mono.just(getFoo()));
+    Flux<User> fooFluxUsing() {
+        return Flux.using(
+                () -> new ResourceLoader(),    // 第一个参数获取资源
+                resource -> Flux.fromIterable(resource.getAll()),   // 第二个参数利用资源生成数据流
+                ResourceLoader::clean   // 第三个参数最终清理资源
+        );
+
     }
+
 
     /**
      * 使用 ${@link Flux#generate(Consumer)} 可编程的生成事件，一个接一个 ，
      */
-    Flux<String> fooFluxGeneerate() {
-        return Flux.defer(() -> Mono.just(getFoo()));
+    Flux<Integer> generate() {
+        return Flux.generate((SynchronousSink<Integer> synchronousSink) -> {
+            synchronousSink.next(2);
+        })
+                .doOnNext(number -> System.out.println(number))
+                .doOnNext(number -> System.out.println(number + 4));
+
     }
 
     /**
      * 使用 ${@link Mono#create(Consumer)} 异步发出T ，
      */
-    Flux<String> fooMonoCreate() {
-
-        return Flux.defer(() -> Mono.just(getFoo()));
+    Mono<String> fooMonoCreate() {
+        return Mono.defer(() -> Mono.create((MonoSink<String> sink) -> {
+            sink.success(getFoo());
+        }));
     }
 
     /**
      * 使用 ${@link Flux#create(Consumer)} 异步发出T ，
      */
     Flux<String> fooFluxCreate() {
-        return Flux.defer(() -> Mono.just(getFoo()));
+        return Flux.create((FluxSink<String> sink) -> {
+            List<String> foo = Arrays.asList(getArray());
+            foo.forEach(sink::next);
+        });
+
     }
-
-
 
 
 }

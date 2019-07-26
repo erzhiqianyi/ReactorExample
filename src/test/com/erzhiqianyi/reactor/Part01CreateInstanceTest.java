@@ -1,5 +1,7 @@
 package com.erzhiqianyi.reactor;
 
+import com.erzhiqianyi.reactor.domain.ResourceLoader;
+import com.erzhiqianyi.reactor.domain.User;
 import org.junit.Before;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
@@ -20,11 +22,21 @@ public class Part01CreateInstanceTest {
 
     @Test
     public void fooMono() {
-        Mono<String> mono = part01CreateInstance.fooMono().log();
+        Mono<String> mono = part01CreateInstance.justMono().log();
         StepVerifier.create(mono)
                 .expectNext("foo")
                 .verifyComplete();
     }
+
+    @Test
+    public void justFlux() {
+        Flux<String> flux = part01CreateInstance.justFlux().log();
+        StepVerifier.create(flux)
+                .expectNext("one", "two", "three")
+                .verifyComplete();
+
+    }
+
 
     @Test
     public void fooOptionalMono() {
@@ -64,14 +76,6 @@ public class Part01CreateInstanceTest {
                 .verifyComplete();
     }
 
-    @Test
-    public void justFlux() {
-        Flux<String> flux = part01CreateInstance.justFlux().log();
-        StepVerifier.create(flux)
-                .expectNext("one", "two", "three")
-                .verifyComplete();
-
-    }
 
     @Test
     public void fluxFromArray() {
@@ -156,7 +160,7 @@ public class Part01CreateInstanceTest {
 
     @Test
     public void errorFlux() {
-        Flux<String> flux = part01CreateInstance.emptyFlux().log();
+        Flux<String> flux = part01CreateInstance.errorFlux().log();
         StepVerifier.create(flux)
                 .expectError(IllegalStateException.class)
                 .verify();
@@ -207,22 +211,56 @@ public class Part01CreateInstanceTest {
 
     @Test
     public void fooMonoUsing() {
+        ResourceLoader resourceLoader = new ResourceLoader();
+        Mono<User> userMono = part01CreateInstance.fooMonoUsing().log();
+        StepVerifier
+                .create(userMono)
+                .expectNext(resourceLoader.getFirst())
+                .verifyComplete();
     }
 
     @Test
     public void fooFluxUsing() {
+        Flux<User> userMono = part01CreateInstance.fooFluxUsing().log();
+        StepVerifier
+                .create(userMono)
+                .expectNext(User.SKYLER, User.JESSE, User.WALTER, User.SAUL)
+                .verifyComplete();
+
     }
 
     @Test
     public void fooFluxGenerate() {
+        Flux<Integer> flux = part01CreateInstance.generate().log();
+        flux.subscribe();
+//        StepVerifier
+//                .create(flux)
+//                .expectSubscription()
+//                .expectNoEvent(Duration.ofSeconds(10))
+//                .thenCancel()
+//                .verify();
+
+
     }
 
     @Test
     public void fooMonoCreate() {
+        Mono<String> mono = part01CreateInstance.fooMonoCreate().log();
+        StepVerifier
+                .create(mono)
+                .expectNext("foo")
+                .verifyComplete();
+
     }
 
     @Test
     public void fooFluxCreate() {
+        Flux<String> flux = part01CreateInstance.fooFluxCreate().log();
+        StepVerifier
+                .create(flux)
+                .expectNext("one","two","three")
+                .verifyComplete();
+
     }
 
     @Test
