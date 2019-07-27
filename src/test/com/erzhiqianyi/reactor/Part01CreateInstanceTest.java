@@ -233,13 +233,6 @@ public class Part01CreateInstanceTest {
     public void fooFluxGenerate() {
         Flux<Integer> flux = part01CreateInstance.generate().log();
         flux.subscribe();
-//        StepVerifier
-//                .create(flux)
-//                .expectSubscription()
-//                .expectNoEvent(Duration.ofSeconds(10))
-//                .thenCancel()
-//                .verify();
-
 
     }
 

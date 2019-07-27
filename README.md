@@ -28,6 +28,29 @@
 		- [generate](#generate)
 		- [create](#create)
     - [转换序列](#转换序列)
+		- [map](#map)
+		- [cast](#cast)
+		- [index](#index)
+		- [flatMap](#flatMap)
+		- [flatMapSequential](#flatMapSequential)
+		- [flatMapMany](#flatMapMany)
+		- [startWith](#startWith)
+		- [concatWith](#concatWith)
+		- [collectList](#collectList)
+		- [collectSortedList](#collectSortedList)
+		- [collectMap](#collectMap)
+		- [collectMultiMap](#collectMultiMap)
+		- [count](#count)
+		- [reduce](#reduce)
+		- [scan](#scan)
+		- [all](#all)
+		- [hasElement](#hasElement)
+		- [hasElement](#hasElement)
+		- [concat](#concat)
+		- [concatWith](#concatWith)
+		- [concatDelayError](#concatDelayError)
+-
+		- [](#)
     - [只读序列](#只读序列)
     - [过虑序列](#过虑序列)
     - [错误处理](#错误处理)
@@ -847,6 +870,7 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 
 ```
 ![](/svg/generateStateless.svg)
+
 ##### create
 - 异步（也可同步）的，每次尽可能多发出元素：
 ```java
@@ -858,9 +882,10 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 	    return create(emitter, OverflowStrategy.BUFFER);
     }
 ```
-
 ![](svg/createForFlux.svg)
+
 #### 转换序列
+##### map
 - 1对1地转化（比如字符串转化为它的长度）
 ```java
     public final <R> Mono<R> map(Function<? super T, ? extends R> mapper) {
@@ -869,7 +894,10 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 		}
 		return onAssembly(new MonoMap<>(this, mapper));
 	}
-    
+```
+![](svg/mapForMono.svg)
+
+```java
     public final <V> Flux<V> map(Function<? super T, ? extends V> mapper) {
 		if (this instanceof Fuseable) {
 			return onAssembly(new FluxMapFuseable<>(this, mapper));
@@ -877,38 +905,231 @@ java.lang.IndexOutOfBoundsException: Source emitted more than one item
 		return onAssembly(new FluxMap<>(this, mapper));
 	}
 ```
+
+![](svg/mapForFlux.svg)
+##### cast
 - 类型转化
 ```java
     public final <E> Mono<E> cast(Class<E> clazz) {
 		Objects.requireNonNull(clazz, "clazz");
 		return map(clazz::cast);
 	}
+```
+![](svg/castForMono.svg)
 
+```java
     public final <E> Flux<E> cast(Class<E> clazz) {
 		Objects.requireNonNull(clazz, "clazz");
 		return map(clazz::cast);
 	}
 ```
-- 为了获得每个元素的序号
+![](svg/castForFlux.svg)
+
+##### index
+- 获取每个元素的序号
 ```java
 	public final Flux<Tuple2<Long, T>> index() {
 		//noinspection unchecked
 		return index(TUPLE2_BIFUNCTION);
 	}
 ```
-- 1对n地转化（如字符串转化为一串字符）：
-    flatMap + 使用一个工厂方法
+![](svg/indexWithMapper.svg)
+
+##### flatMap
+```java
+	public final <R> Mono<R> flatMap(Function<? super T, ? extends Mono<? extends R>>
+			transformer) {
+		return onAssembly(new MonoFlatMap<>(this, transformer));
+	}
+```
+![](svg/flatMapForMono.svg)
+
+```java
+	public final <R> Flux<R> flatMap(Function<? super T, ? extends Publisher<? extends R>> mapper) {
+		return flatMap(mapper, Queues.SMALL_BUFFER_SIZE, Queues
+				.XS_BUFFER_SIZE);
+	}
+
+```
+![](svg/flatMapForFlux.svg)
+
+- 1对n地转化
+```
+flatMap + 使用一个工厂方法
+```
+比如将字符串转为一串字符
+```java
+ return Flux.just(str).flatMap(item -> Flux.just(item.split("")));
+```
+
 - 1对n地转化可自定义转化方法和/或状态：handle
-对每一个元素执行一个异步操作（如对 url 执行 http 请求）：flatMap + 一个异步的返回类型为 Publisher 的方法
-- 忽略一些数据：在 flatMap lambda 中根据条件返回一个 Mono.empty()
-- 保留原来的序列顺序：Flux#flatMapSequential（对每个元素的异步任务会立即执行，但会将结果按照原序列顺序排序）
-- 当 Mono 元素的异步任务会返回多个元素的序列时：Mono#flatMapMany
-我想添加一些数据元素到一个现有的序列：
+	对每一个元素执行一个异步操作（如对 url 执行 http 请求）：flatMap + 一个异步的返回类型为 Publisher 的方法
+```java
+Flux.just("url").flatMap(item -> Mono.fromCallable(
+                () -> {
+                    System.out.println("flux:callable task executor: " + Thread.currentThread().getName());
+                    return ("result:" + item);
+                }));
+```
+- 忽略一些数据
+	在 flatMap lambda 中根据条件返回一个 Mono.empty()
+```java
+  return Flux.just("one","two","three","four").flatMap(item -> {
+            if (item.length() > 3) {
+                return Mono.just(item);
+            } else {
+                return Mono.empty();
+            }
+        });
+```
+##### flatMapSequential 
+- 保留原来的序列顺序,对每个元素的异步任务会立即执行，但会将结果按照原序列顺序排序）
+```java
+	public final <R> Flux<R> flatMapSequential(Function<? super T, ? extends
+			Publisher<? extends R>> mapper) {
+		return flatMapSequential(mapper, Queues.SMALL_BUFFER_SIZE);
+	}
+```
+![](svg/flatMapSequential.svg)
 
-在开头添加：Flux#startWith(T...)
-在最后添加：Flux#concatWith(T...)
-我想将 Flux 转化为集合（一下都是针对 Flux 的）
+##### flatMapMany 
+-  Mono 元素的异步任务返回多个元素的序列
+```java
+	public final <R> Flux<R> flatMapMany(Function<? super T, ? extends Publisher<? extends R>> mapper) {
+		return Flux.onAssembly(new MonoFlatMapMany<>(this, mapper));
+	}
 
+```
+![](svg/flatMapMany.svg)
+
+##### startWith 
+- 在开头添加
+```java
+	public final Flux<T> startWith(T... values) {
+		return startWith(just(values));
+	}
+```
+![](svg/startWithIterable.svg)
+
+##### concatWith
+- 在最后添加
+```java
+	public final Flux<T> concatWith(Publisher<? extends T> other) {
+		if (this instanceof FluxConcatArray) {
+			@SuppressWarnings({ "unchecked" })
+			FluxConcatArray<T> fluxConcatArray = (FluxConcatArray<T>) this;
+
+			return fluxConcatArray.concatAdditionalSourceLast(other);
+		}
+		return concat(this, other);
+	}
+
+```
+![](svg/concatWithForFlux.svg)
+
+##### collectList 
+- 转为list
+```java
+	public final Mono<List<T>> collectList() {
+		if (this instanceof Callable) {
+			if (this instanceof Fuseable.ScalarCallable) {
+				@SuppressWarnings("unchecked")
+				Fuseable.ScalarCallable<T> scalarCallable = (Fuseable.ScalarCallable<T>) this;
+
+				T v;
+				try {
+					v = scalarCallable.call();
+				}
+				catch (Exception e) {
+					return Mono.error(e);
+				}
+				if (v == null) {
+					return Mono.onAssembly(new MonoSupplier<>(listSupplier()));
+				}
+				return Mono.just(v).map(u -> {
+					List<T> list = Flux.<T>listSupplier().get();
+					list.add(u);
+					return list;
+				});
+
+			}
+			@SuppressWarnings("unchecked")
+			Callable<T> thiz = (Callable<T>)this;
+			return Mono.onAssembly(new MonoCallable<>(thiz).map(u -> {
+				List<T> list = Flux.<T>listSupplier().get();
+				list.add(u);
+				return list;
+			}));
+		}
+		return Mono.onAssembly(new MonoCollectList<>(this));
+	}
+```
+![](svg/collectList.svg)
+
+##### collectSortedList 
+```java
+	public final Mono<List<T>> collectSortedList(@Nullable Comparator<? super T> comparator) {
+		return collectList().map(list -> {
+			// Note: this assumes the list emitted by buffer() is mutable
+			if (comparator != null) {
+				list.sort(comparator);
+			} else {
+
+				List<Comparable> l = (List<Comparable>)list;
+				Collections.sort(l);
+			}
+			return list;
+		});
+	}
+```
+![](svg/collectSortedList.svg)
+
+##### collectMap 
+- 转为map,和 ```Stream``` 中的 
+```java
+    public static <T, K, U>
+    Collector<T, ?, Map<K,U>> toMap(Function<? super T, ? extends K> keyMapper,
+                                    Function<? super T, ? extends U> valueMapper) {
+        return toMap(keyMapper, valueMapper, throwingMerger(), HashMap::new);
+    }
+
+```
+
+```java
+	public final <K, V> Mono<Map<K, V>> collectMap(Function<? super T, ? extends K> keyExtractor,
+			Function<? super T, ? extends V> valueExtractor) {
+		return collectMap(keyExtractor, valueExtractor, () -> new HashMap<>());
+	}
+
+```
+![](svg/collectMapWithKeyExtractor.svg)
+
+##### collectMultiMap 
+- map分组,相当于 ```Stream``` 中的
+```java
+ public static <T, K> Collector<T, ?, Map<K, List<T>>>
+    groupingBy(Function<? super T, ? extends K> classifier) {
+        return groupingBy(classifier, toList());
+    }
+```
+
+```java
+	public final <K> Mono<Map<K, Collection<T>>> collectMultimap(Function<? super T, ? extends K> keyExtractor) {
+		return collectMultimap(keyExtractor, identityFunction());
+	}
+
+```
+![](svg/collectMultiMapWithKeyExtractor.svg)
+
+##### count
+##### reduce 
+##### scan 
+##### all
+##### hasElements
+##### hasElement
+##### concat  
+##### concatWith
+##### concatDelayError
 - 转化为 List：collectList，collectSortedList
 - 转化为 Map：collectMap，collectMultiMap
 - 转化为自定义集合：collect
