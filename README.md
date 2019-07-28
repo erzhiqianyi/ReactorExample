@@ -1369,6 +1369,7 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ```
 ![](svg/orForMono.svg)
 ##### switchMap
+- 由一个序列触发  
 ```java
 	public final <V> Flux<V> switchMap(Function<? super T, Publisher<? extends V>> fn) {
 		return switchMap(fn, Queues.XS_BUFFER_SIZE);
@@ -1378,6 +1379,10 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ![](svg/switchMap.svg)
 
 ##### switchOnNext
+```
+
+```
+![](svg/switchMap.svg)
 
 ##### repeat
 ##### interval
