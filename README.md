@@ -41,16 +41,39 @@
 		- [collectMap](#collectMap)
 		- [collectMultiMap](#collectMultiMap)
 		- [count](#count)
-		- [reduce](#reduce)
-		- [scan](#scan)
 		- [all](#all)
+		- [any](#any)
 		- [hasElement](#hasElement)
 		- [hasElement](#hasElement)
 		- [concat](#concat)
 		- [concatWith](#concatWith)
 		- [concatDelayError](#concatDelayError)
--
-		- [](#)
+		- [mergeSequential](#mergeSequential)
+		- [merge](#merge)
+		- [mergeWith](#mergeWith)
+		- [zip](#zip)
+		- [zipWith](#zipWith)
+		- [and](#and)
+		- [when](#when)
+		- [combineLatest](#combineLatest)
+		- [first](#first)
+		- [or](#or)
+		- [switchMap](#switchMap)
+		- [switchOnNext](#switchOnNext)
+		- [repeat](#repeat)
+		- [interval](#interval)
+		- [defaultIfEmpty](#defaultIfEmpty)
+		- [switchIfEmpty](#switchIfEmpty)
+		- [ignoreElements](#ignoreElements)
+		- [then](#then)
+		- [thenEmpty](#thenEmpty) 
+		- [thenReturn](#thenReturn)
+		- [thenMany](#thenMany)
+		- [delayUntilOther](#delayUntilOther)
+		- [expand](#expand) 
+		- [expandDeep](#expandDeep)
+		- [reduce](#reduce)
+		- [scan](#scan)
     - [只读序列](#只读序列)
     - [过虑序列](#过虑序列)
     - [错误处理](#错误处理)
@@ -1107,7 +1130,7 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ##### collectMultiMap 
 - map分组,相当于 ```Stream``` 中的
 ```java
- public static <T, K> Collector<T, ?, Map<K, List<T>>>
+	public static <T, K> Collector<T, ?, Map<K, List<T>>>
     groupingBy(Function<? super T, ? extends K> classifier) {
         return groupingBy(classifier, toList());
     }
@@ -1122,30 +1145,100 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ![](svg/collectMultiMapWithKeyExtractor.svg)
 
 ##### count
+- 计数，类似 ```Stream``` 中的 ```count()```
+```java
+	public final Mono<Long> count() {
+		return Mono.onAssembly(new MonoCount<>(this));
+	}
+
+```
+![](svg/count.svg)
+
+##### all
+- 所有元素都满足条件,相当于 ```Stream``` 中的 ```allMatch```
+```java
+	public final Mono<Boolean> all(Predicate<? super T> predicate) {
+		return Mono.onAssembly(new MonoAll<>(this, predicate));
+	}
+```
+![](svg/all.svg)
+
+##### any 
+- 至少有一个元素满足条件 相当于 ```Stream``` 中的 ```anyMatch```
+```java
+	public final Mono<Boolean> any(Predicate<? super T> predicate) {
+		return Mono.onAssembly(new MonoAny<>(this, predicate));
+	}
+
+```
+![](svg/any.svg)
+
+##### hasElements
+- 判断流是否有元素
+```java
+	public final Mono<Boolean> hasElements() {
+		return Mono.onAssembly(new MonoHasElements<>(this));
+	}
+```
+![](svg/hasElements.svg)
+
+##### hasElement
+- 判断流中至少有一个元素相等
+```java
+	public final Mono<Boolean> hasElement(T value) {
+		Objects.requireNonNull(value, "value");
+		return any(t -> Objects.equals(value, t));
+	}
+```
+![](svg/hasElementForFlux.svg)
+
+##### concat  
+- 按顺序连接
+```java
+	public static <T> Flux<T> concat(Publisher<? extends T>... sources) {
+		return onAssembly(new FluxConcatArray<>(false, sources));
+	}
+
+```
+![](svg/concatVarSources.svg)
+
+##### concatDelayError
+- 连接元素，如果发生错误，等待所有的 ```Publisher``` 连接完成
+```java
+	public static <T> Flux<T> concatDelayError(Publisher<? extends T>... sources) {
+		return onAssembly(new FluxConcatArray<>(true, sources));
+	}
+```  
+![](svg/concatAsyncSources.svg)
+##### mergeSequential 
+- 按订阅顺序连接（这里的合并仍然可以理解成序列的连接）：Flux#mergeSequential
+##### merge 
+##### mergeWith 
+- 按元素发出的顺序合并（无论哪个序列的，元素先到先合并）：Flux#merge / .mergeWith(other)
+##### zip
+##### zipWith
+##### and
+##### when
+##### combineLatest
+##### first
+##### or 
+##### switchMap
+##### switchOnNext
+##### repeat
+##### interval
+##### defaultIfEmpty
+##### switchIfEmpty 
+##### ignoreElements
+##### then
+##### thenEmpty 
+##### thenReturn
+##### thenMany
+##### delayUntilOther
+##### expand 
+##### expandDeep
 ##### reduce 
 ##### scan 
-##### all
-##### hasElements
-##### hasElement
-##### concat  
-##### concatWith
-##### concatDelayError
-- 转化为 List：collectList，collectSortedList
-- 转化为 Map：collectMap，collectMultiMap
-- 转化为自定义集合：collect
-- 计数：count
-- reduce 算法（将上个元素的reduce结果与当前元素值作为输入执行reduce方法，如sum） reduce
-- 每次 reduce 的结果立即发出：scan
-转化为一个 boolean 值：
-- 对所有元素判断都为true：all
-- 对至少一个元素判断为true：any
-- 判断序列是否有元素（不为空）：hasElements
-- 判断序列中是否有匹配的元素：hasElement
 
-- 按序连接：Flux#concat 或 .concatWith(other)
-- 即使有错误，也会等所有的 publishers 连接完成：Flux#concatDelayError
-- 按订阅顺序连接（这里的合并仍然可以理解成序列的连接）：Flux#mergeSequential
-- 按元素发出的顺序合并（无论哪个序列的，元素先到先合并）：Flux#merge / .mergeWith(other)
 - 元素类型会发生变化：Flux#zip / Flux#zipWith
 - 2个 Monos 组成1个 Tuple2：Mono#zipWith
 n个 Monos 的元素都发出来后组成一个 Tuple：Mono#zip

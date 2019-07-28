@@ -11,15 +11,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuple2;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.junit.Assert.*;
 
 public class Part02TransformTest {
 
@@ -207,12 +202,87 @@ public class Part02TransformTest {
     @Test
     public void collectMultimap() {
         List<String> list = Arrays.asList("one", "two", "three", "four", "five", "six", "seven");
-        Mono<Map<Integer, List<String>>> mono = part02Transform.collectMultimap(Flux.fromIterable(list)).log();
-        Map<Integer, List<String>> map = list.stream()
-                .collect(Collectors.groupingBy(String::length));
+        Mono<Map<Integer, Collection<String>>> mono = part02Transform.collectMultimap(Flux.fromIterable(list)).log();
+        Map<Integer, Collection<String>> map = list.stream()
+                .collect(Collectors.groupingBy(String::length, Collectors.toCollection(ArrayList::new)));
         StepVerifier.create(mono)
                 .expectNext(map)
                 .verifyComplete();
 
     }
+
+    @Test
+    public void count() {
+        List<String> list = Arrays.asList("one", "two", "three", "four", "five", "six", "seven");
+        Mono<Long> mono = part02Transform.count(Flux.fromIterable(list));
+        StepVerifier.create(mono)
+                .expectNext(Long.valueOf(list.size()))
+                .verifyComplete();
+    }
+
+    @Test
+    public void all() {
+        List<String> list = Arrays.asList("one", "two", "three", "four", "five", "six", "seven");
+        boolean allMatch = list.stream().allMatch(s -> s.length() > 2);
+        Mono<Boolean> mono = part02Transform.all(Flux.fromIterable(list), s -> s.length() > 2);
+        StepVerifier.create(mono)
+                .expectNext(allMatch)
+                .verifyComplete();
+    }
+
+    @Test
+    public void any() {
+        List<String> list = Arrays.asList("one", "two", "three", "four", "five", "six", "seven");
+        Flux<String> flux = Flux.fromIterable(list);
+        Mono<Boolean> mono = part02Transform.any(flux, s -> s.length() > 4).log();
+        StepVerifier.create(mono)
+                .expectNext(true)
+                .verifyComplete();
+        mono = part02Transform.any(flux, s -> s.length() > 10).log();
+        StepVerifier.create(mono)
+                .expectNext(false)
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void hasElements() {
+        List<String> list = Arrays.asList("one", "two", "three", "four", "five", "six", "seven");
+        Mono<Boolean> mono = part02Transform.hasElements(Flux.fromIterable(list));
+        StepVerifier.create(mono)
+                .expectNext(true)
+                .verifyComplete();
+    }
+
+    @Test
+    public void hasElement() {
+        List<String> list = Arrays.asList("one", "two", "three", "four", "five", "six", "seven");
+        Flux<String> flux = Flux.fromIterable(list);
+        Mono<Boolean> mono = part02Transform.hasElement(flux, "one").log();
+        StepVerifier.create(mono)
+                .expectNext(true)
+                .verifyComplete();
+        mono = part02Transform.hasElement(flux, "nine").log();
+        StepVerifier.create(mono)
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    public void concat() {
+        List<String> list = Arrays.asList("one", "two", "three");
+        List<String> another = Arrays.asList("four", "five", "six", "seven");
+        Flux<String> flux = Flux.fromIterable(list);
+        Flux<String> concatFlux = part02Transform.concat(flux, another).log();
+
+        StepVerifier.create(concatFlux)
+                .expectNext( "one", "two", "three","four","five", "six", "seven")
+                .verifyComplete();
+    }
+
+    @Test
+    public void concatDelayError(){
+
+    }
+
 }

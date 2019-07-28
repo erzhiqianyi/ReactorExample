@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Part02Transform {
 
@@ -170,8 +172,58 @@ public class Part02Transform {
     /**
      * 使用 {@link Flux#collectMultimap(Function)}  转为Map
      */
-    Mono<Map<Integer, List<String>>> collectMultimap(Flux<String> flux) {
-        return null;
+    Mono<Map<Integer, Collection<String>>> collectMultimap(Flux<String> flux) {
+        return flux.collectMultimap(String::length);
+    }
+
+    /**
+     * 使用 {@link Flux#count()} 计数
+     */
+    Mono<Long> count(Flux<String> flux) {
+        return flux.count();
+    }
+
+    /**
+     * 使用 {@link Flux#all(Predicate)} 判断所有元素都满足条件
+     */
+    Mono<Boolean> all(Flux<String> flux, Predicate<String> predicate) {
+        return flux.all(predicate);
+    }
+
+
+    /**
+     * 使用 {@link Flux#any(Predicate)}  判断至少有一个元素满足条件
+     */
+    Mono<Boolean> any(Flux<String> flux, Predicate<String> predicate) {
+        return flux.any(predicate);
+    }
+
+    /**
+     * 使用 {@link Flux#hasElements()} 判断流是否有数据
+     */
+    Mono<Boolean> hasElements(Flux<String> flux) {
+        return flux.hasElements();
+    }
+
+    /**
+     * 使用 {@link Flux#hasElement(Object)}  判断流中至少有一个元素满足条件
+     */
+    Mono<Boolean> hasElement(Flux<String> flux, String value) {
+        return flux.hasElement(value);
+    }
+
+    /**
+     * 使用 {@link Flux#concat(Iterable)} 连接其他元素
+     */
+    Flux<String> concat(Flux<String> flux, List<String> values) {
+        return Flux.concat(flux, Flux.fromIterable(values));
+    }
+
+    /**
+     * 使用 {@link Flux#concatDelayError(Publisher[])} 连接元素，如果发生错误，等待所有的 发布者 连接完成
+     */
+    Flux<String> concatDelayError(Flux<String> flux, List<String> values) {
+        return Flux.concatDelayError(flux,Flux.error(new IllegalStateException()), Flux.fromIterable(values));
     }
 
 
