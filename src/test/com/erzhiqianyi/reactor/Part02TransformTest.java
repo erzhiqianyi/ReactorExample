@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuple2;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -276,13 +277,191 @@ public class Part02TransformTest {
         Flux<String> concatFlux = part02Transform.concat(flux, another).log();
 
         StepVerifier.create(concatFlux)
-                .expectNext( "one", "two", "three","four","five", "six", "seven")
+                .expectNext("one", "two", "three", "four", "five", "six", "seven")
                 .verifyComplete();
     }
 
     @Test
-    public void concatDelayError(){
+    public void concatDelayError() {
+        List<String> list = Arrays.asList("one", "two", "three");
+        List<String> another = Arrays.asList("four", "five", "six", "seven");
+        Flux<String> flux = Flux.fromIterable(list);
+        Flux<String> concatFlux = part02Transform.concatDelayError(flux, another).log();
+        StepVerifier.create(concatFlux)
+                .expectNext("one", "two", "three", "four", "five", "six", "seven")
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
+
+    @Test
+    public void mergeSequential() {
+        String[] array = {"one", "three", "four",};
+        Flux<String> mergeFlux = part02Transform.mergeSequential(array).log();
+        StepVerifier.create(mergeFlux)
+                .expectNext("one", "three", "four")
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void merge() {
+        String[] array = {"one", "three", "four",};
+        Flux<String> mergeFlux = part02Transform.merge(array).log();
+        StepVerifier.create(mergeFlux)
+                .expectNext("one", "four", "three")
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void mergeWith() {
+        Flux<String> flux = Flux.just("zero");
+        String[] array = {"one", "three", "four",};
+        Flux<String> mergeFlux = part02Transform.mergeWith(flux, array).log();
+        StepVerifier.create(mergeFlux)
+                .expectNext("zero", "one", "four", "three")
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void zip() {
+        Flux<Integer> flux = Flux.just(1, 2, 3, 4);
+        Flux<String> anotherFlux = Flux.just("one", "two", "three", "four");
+        Flux<Tuple2<Integer, String>> tuple2Flux = part02Transform.zip(flux, anotherFlux).log();
+        StepVerifier.create(tuple2Flux.map(Tuple2::toString))
+                .expectNext("[1,one]", "[2,two]", "[3,three]", "[4,four]")
+                .expectComplete()
+                .verify();
+    }
+
+
+    @Test
+    public void zipWith() {
+        Flux<Integer> flux = Flux.just(1, 2, 3, 4);
+        Flux<String> anotherFlux = Flux.just("one", "two", "three", "four");
+        Flux<Tuple2<Integer, String>> tuple2Flux = part02Transform.zipWith(flux, anotherFlux).log();
+        StepVerifier.create(tuple2Flux.map(Tuple2::toString))
+                .expectNext("[1,one]", "[2,two]", "[3,three]", "[4,four]")
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void monoZip() {
+        Mono<String> one = Mono.just("one");
+        Mono<Integer> two = Mono.just(1);
+        Mono<Tuple2<Integer, String>> tuple2Mono = part02Transform.monoZip(two, one).log();
+        StepVerifier.create(tuple2Mono.map(Tuple2::toString))
+                .expectNext("[1,one]")
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void monoZipWith() {
+        Mono<String> one = Mono.just("one");
+        Mono<Integer> two = Mono.just(1);
+        Mono<Tuple2<Integer, String>> tuple2Mono = part02Transform.monoZipWith(two, one).log();
+        StepVerifier.create(tuple2Mono.map(Tuple2::toString))
+                .expectNext("[1,one]")
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void and() {
+        Mono<String> one = Mono.just("one");
+        Mono<Integer> two = Mono.just(1);
+        Mono<Void> mono = part02Transform.and(two, one).log();
+        StepVerifier.create(mono)
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void when() {
+        Mono<String> one = Mono.just("one");
+        Mono<String> two = Mono.just("two");
+        Mono<Void> mono = part02Transform.when(two, one).log();
+        StepVerifier.create(mono)
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void combineLatest() {
+        Flux<String> one = Flux.just("A", "B", "C", "D");
+        Flux<String> another = Flux.just("B", "E");
+        Flux<String> flux = part02Transform.combineLatest(one, another);
+        flux.subscribe(System.out::println);
+    }
+
+    @Test
+    public void firstFlux() {
+        Flux<String> one = Flux.just("A", "B", "C", "D");
+        Flux<String> another = Flux.just("B", "E");
+        Flux<String> flux = part02Transform.firstFlux(one, another).log();
+        StepVerifier.create(flux)
+                .expectNext("A", "B", "C", "D")
+                .verifyComplete();
+        flux = part02Transform.firstFlux(another, one).log();
+        StepVerifier.create(flux)
+                .expectNext("B", "E")
+                .verifyComplete();
 
     }
 
+
+    @Test
+    public void firstMono() {
+        Mono<String> one = Mono.just("one");
+        Mono<String> another = Mono.just("another");
+        Mono<String> mono = part02Transform.firstMono(one, another).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+
+        mono = part02Transform.firstMono(another, one).log();
+        StepVerifier.create(mono)
+                .expectNext("another")
+                .verifyComplete();
+    }
+
+    @Test
+    public void orFlux() {
+        Flux<String> one = Flux.just("A", "B", "C", "D");
+        Flux<String> another = Flux.just("B", "E");
+        Flux<String> flux = part02Transform.orFlux(one, another).log();
+        StepVerifier.create(flux)
+                .expectNext("A", "B", "C", "D")
+                .verifyComplete();
+        flux = part02Transform.orFlux(another, Flux.empty()).or(one).log();
+        StepVerifier.create(flux)
+                .expectNext("B", "E")
+                .verifyComplete();
+    }
+
+    @Test
+    public void orMono() {
+        Mono<String> one = Mono.just("one");
+        Mono<String> two = Mono.just("two");
+        Mono<String> another = Mono.delay(Duration.ofSeconds(2)).flatMap(c -> two);
+        Mono<String> flux = part02Transform.orMono(one, another).log();
+        StepVerifier.create(flux)
+                .expectNext("one")
+                .verifyComplete();
+        flux = part02Transform.orMono(another, one).log();
+        StepVerifier.create(flux)
+                .expectNext("one")
+                .verifyComplete();
+    }
+
+    @Test
+    public void switchMap() {
+        Flux<String> flux = Flux.just("one","two","three","four","five","six");
+        flux = part02Transform.switchMap(flux);
+        flux.subscribe(System.out::println);
+    }
 }
+

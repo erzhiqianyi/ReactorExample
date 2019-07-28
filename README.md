@@ -1210,20 +1210,175 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 	}
 ```  
 ![](svg/concatAsyncSources.svg)
+
 ##### mergeSequential 
-- 按订阅顺序连接（这里的合并仍然可以理解成序列的连接）：Flux#mergeSequential
+- 按订阅顺序连接（这里的合并仍然可以理解成序列的连接）
+```java
+	public static <I> Flux<I> mergeSequential(Publisher<? extends I>... sources) {
+		return mergeSequential(Queues.XS_BUFFER_SIZE, false, sources);
+	}
+```
+![](svg/mergeSequentialAsyncSources.svg)
+
 ##### merge 
+- 按元素发出的顺序合并，先到先合并
+```java
+	public static <I> Flux<I> merge(Publisher<? extends I>... sources) {
+		return merge(Queues.XS_BUFFER_SIZE, sources);
+	}
+```
+![](svg/mergeFixedSources.svg)
+
 ##### mergeWith 
-- 按元素发出的顺序合并（无论哪个序列的，元素先到先合并）：Flux#merge / .mergeWith(other)
+- 按元素发出的顺序合并，先到先合并
+```java
+	public final Flux<T> mergeWith(Publisher<? extends T> other) {
+		if (this instanceof FluxMerge) {
+			FluxMerge<T> fluxMerge = (FluxMerge<T>) this;
+			return fluxMerge.mergeAdditionalSource(other, Queues::get);
+		}
+		return merge(this, other);
+	}
+
+```
+![](svg/mergeWithForFlux.svg)
+
 ##### zip
+-  将两个数据源合并到一起，按顺序一边取一个，直到其中一个数据源结束
+```java
+	public static <T1, T2> Flux<Tuple2<T1, T2>> zip(Publisher<? extends T1> source1, Publisher<? extends T2> source2) {
+		return zip(source1, source2, tuple2Function());
+	}
+
+```
+![](svg/zipIterableSourcesForFlux.svg)
+
+```java
+	public static <T1, T2> Mono<Tuple2<T1, T2>> zip(Mono<? extends T1> p1, Mono<? extends T2> p2) {
+		return zip(p1, p2, Flux.tuple2Function());
+	}
+
+```
+![](svg/zipVarSourcesWithZipperForMono.svg)
+
 ##### zipWith
+-  将两个数据源合并到一起，按顺序一边取一个，直到其中一个数据源结束
+```java
+	public final <T2> Flux<Tuple2<T, T2>> zipWith(Publisher<? extends T2> source2) {
+		return zipWith(source2, tuple2Function());
+	}
+```
+![](svg/zipWithOtherForFlux.svg)
+
+```java
+	public final <T2> Mono<Tuple2<T, T2>> zipWith(Mono<? extends T2> other) {
+		return zipWith(other, Flux.tuple2Function());
+	}
+
+```
+![](svg/zipWithOtherForMono.svg)
+
 ##### and
+-  在 ```Mono``` 终止时转换为一个 ```Mono<Void>```
+```java
+	public final Mono<Void> and(Publisher<?> other) {
+		if (this instanceof MonoWhen) {
+			@SuppressWarnings("unchecked") MonoWhen o = (MonoWhen) this;
+			Mono<Void> result = o.whenAdditionalSource(other);
+			if (result != null) {
+				return result;
+			}
+		}
+
+		return when(this, other);
+	}
+```
+![](svg/and.svg)
+
 ##### when
+- 当 n 个 ```Mono``` 都终止时返回 ```Mono<Void>```
+```java
+	public static Mono<Void> when(Publisher<?>... sources) {
+		if (sources.length == 0) {
+			return empty();
+		}
+		if (sources.length == 1) {
+			return empty(sources[0]);
+		}
+		return onAssembly(new MonoWhen(false, sources));
+	}
+
+```
+![](svg/when.svg)
+
 ##### combineLatest
+- 合并最近发出的元素 
+```java
+	public static <T, V> Flux<V> combineLatest(Function<Object[], V> combinator, Publisher<? extends T>... sources) {
+		return combineLatest(combinator, Queues.XS_BUFFER_SIZE, sources);
+	}
+```
+![](svg/combineLatest.svg)
+
 ##### first
+- 挑选出第一个发布者，由其提供事件。能有效避免多个源的冲突。
+```java
+	public static <I> Flux<I> first(Publisher<? extends I>... sources) {
+		return onAssembly(new FluxFirstEmitting<>(sources));
+	}
+
+```
+![](svg/firstForFlux.svg)
+```java
+	public static <T> Mono<T> first(Mono<? extends T>... monos) {
+		return onAssembly(new MonoFirst<>(monos));
+	}
+
+```
+![](svg/firstForMono.svg)
+
 ##### or 
+- 挑选出第一个发布者
+
+```java
+	public final Flux<T> or(Publisher<? extends T> other) {
+		if (this instanceof FluxFirstEmitting) {
+			FluxFirstEmitting<T> publisherAmb = (FluxFirstEmitting<T>) this;
+
+			FluxFirstEmitting<T> result = publisherAmb.ambAdditionalSource(other);
+			if (result != null) {
+				return result;
+			}
+		}
+		return first(this, other);
+	}
+```
+![](svg/orForFlux.svg)
+
+```java
+	public final Mono<T> or(Mono<? extends T> other) {
+		if (this instanceof MonoFirst) {
+			MonoFirst<T> a = (MonoFirst<T>) this;
+			Mono<T> result =  a.orAdditionalSource(other);
+			if (result != null) {
+				return result;
+			}
+		}
+		return first(this, other);
+	}k
+```
+![](svg/orForMono.svg)
 ##### switchMap
+```java
+	public final <V> Flux<V> switchMap(Function<? super T, Publisher<? extends V>> fn) {
+		return switchMap(fn, Queues.XS_BUFFER_SIZE);
+	}
+
+```
+![](svg/switchMap.svg)
+
 ##### switchOnNext
+
 ##### repeat
 ##### interval
 ##### defaultIfEmpty
@@ -1239,17 +1394,6 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ##### reduce 
 ##### scan 
 
-- 元素类型会发生变化：Flux#zip / Flux#zipWith
-- 2个 Monos 组成1个 Tuple2：Mono#zipWith
-n个 Monos 的元素都发出来后组成一个 Tuple：Mono#zip
-- 在终止信号出现时“采取行动”：
-在 Mono 终止时转换为一个 Mono<Void>：Mono#and
-- 当 n 个 Mono 都终止时返回 Mono<Void>：Mono#when
-返回一个存放组合数据的类型，对于被合并的多个序列： 
-每个序列都发出一个元素时：Flux#zip
-任何一个序列发出元素时：Flux#combineLatest
-只取各个序列的第一个元素：Flux#first，Mono#first，mono.or 
-(otherMono).or(thirdMono)，`flux.or(otherFlux).or(thirdFlux)
 由一个序列触发（类似于 flatMap，不过“喜新厌旧”）：switchMap
 由每个新序列开始时触发（也是“喜新厌旧”风格）：switchOnNext
 我想重复一个序列：repeat

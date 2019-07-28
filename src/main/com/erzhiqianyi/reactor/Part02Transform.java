@@ -8,10 +8,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -223,7 +220,147 @@ public class Part02Transform {
      * 使用 {@link Flux#concatDelayError(Publisher[])} 连接元素，如果发生错误，等待所有的 发布者 连接完成
      */
     Flux<String> concatDelayError(Flux<String> flux, List<String> values) {
-        return Flux.concatDelayError(flux,Flux.error(new IllegalStateException()), Flux.fromIterable(values));
+        return Flux.concatDelayError(flux, Flux.error(new IllegalStateException()), Flux.fromIterable(values));
+    }
+
+    /**
+     * 使用 {@link Flux#mergeSequential(Publisher[])} 按订阅顺序merge
+     */
+    Flux<String> mergeSequential(String... values) {
+        Flux<String> flux = Flux.fromArray(values);
+        return Flux.mergeSequential(Flux.just(flux.flatMap(item -> Flux.just(item))));
+    }
+
+    /**
+     * 使用 {@link Flux#merge(Publisher)}  按到元素到达的顺序merge
+     */
+    Flux<String> merge(String... values) {
+        Flux<String> flux = Flux.fromArray(values);
+        return Flux.merge(Flux.just(flux.flatMap(item -> withDelay(Mono.just(item), item.length()))));
+    }
+
+    /**
+     * 使用 {@link Flux#mergeWith(Publisher)}  按到元素到达的顺序merge
+     */
+    Flux<String> mergeWith(Flux<String> flux, String... values) {
+        Flux<String> anotherFlux = Flux.fromArray(values)
+                .flatMap(item -> withDelay(Mono.just(item), item.length()));
+        return flux.mergeWith(anotherFlux);
+    }
+
+    /**
+     * 使用 {@link Flux#zip(Publisher, Publisher)}
+     * 将两个数据源合并到一起，一边取一个，直到其中一个数据源结束
+     */
+    Flux<Tuple2<Integer, String>> zip(Flux<Integer> flux, Flux<String> anotherFlux) {
+        return Flux.zip(flux, anotherFlux);
+    }
+
+    /**
+     * 使用 {@link Flux#zipWith(Publisher)}
+     * 将两个数据源合并到一起，一边取一个，直到其中一个数据源结束
+     */
+    Flux<Tuple2<Integer, String>> zipWith(Flux<Integer> flux, Flux<String> another) {
+        return flux.zipWith(another);
+    }
+
+    /**
+     * 使用 {@link Mono#zip(Mono, Mono)} (Publisher)}
+     * 将两个Mono 合并到一起
+     */
+    Mono<Tuple2<Integer, String>> monoZip(Mono<Integer> one, Mono<String> another) {
+        return Mono.zip(one, another);
+    }
+
+    /**
+     * 使用 {@link Mono#zipWith(Mono)}
+     * 将两个Mono合并到一起
+     */
+    Mono<Tuple2<Integer, String>> monoZipWith(Mono<Integer> one, Mono<String> another) {
+        return one.zipWith(another);
+    }
+
+
+    /**
+     * 使用 {@link Mono#and(Publisher)}
+     * 在 Mono 终止时转换为一个 Mono<Void>
+     */
+    Mono<Void> and(Mono<Integer> one, Mono<String> another) {
+        return one.log().and(another);
+    }
+
+    /**
+     * 使用 {@link Mono#when(Publisher[])}
+     * 所有 Mono 终止时转换为一个 Mono<Void>
+     */
+    Mono<Void> when(Mono<String> one, Mono<String> another) {
+        return Mono.when(withDelay(one, 2), withDelay(another, 3));
+    }
+
+    /**
+     * 使用 {@link Flux#combineLatest(Function, Publisher[])}
+     * 合并最近发出的元素
+     */
+    Flux<String> combineLatest(Flux<String> one, Flux<String> another) {
+        Function<Object[], String> combinator = objects -> Arrays.toString(objects);
+        return Flux.combineLatest(combinator, one, another).log();
+    }
+
+    /**
+     * 使用 {@link Flux#first(Publisher[])}
+     * 挑选出第一个发布者，由其提供事件。能有效避免多个源的冲突。
+     */
+    Flux<String> firstFlux(Flux<String>... sources) {
+        return Flux.first(sources);
+    }
+
+    /**
+     * 使用 {@link Mono#first(Mono[])}
+     * 挑选出第一个发布者，由其提供事件。能有效避免多个源的冲突。
+     */
+    Mono<String> firstMono(Mono<String>... sources) {
+        return Mono.first(sources);
+    }
+
+    /**
+     * 使用 {@link Flux#or(Publisher)}
+     * 挑选出第一个发布者，由其提供事件。能有效避免多个源的冲突。
+     */
+    Flux<String> orFlux(Flux<String> one, Flux<String> another) {
+        return one.or(another);
+    }
+
+    /**
+     * 使用 {@link Mono#or(Mono)}
+     * 挑选出第一个发布者，由其提供事件。能有效避免多个源的冲突。
+     */
+    Mono<String> orMono(Mono<String> one, Mono<String> another) {
+        return one.or(another);
+    }
+
+    /**
+     * 使用 {@link Flux#switchMap(Function)} 由一个序列触发，
+     */
+    Flux<String> switchMap(Flux<String> flux) {
+        return flux.log().switchMap(item -> {
+            if (item.length() > 3) {
+                return Flux.just(item).log();
+            } else {
+                return Flux.just(item).flatMap(sub -> Flux.just(sub.split(""))).log();
+            }
+        });
+    }
+    /**
+     * 使用 {@link Flux#switchOnNext(Publisher)} 由一个序列触发，
+     */
+    Flux<String> switchMap(Flux<String> flux) {
+        return flux.log().switchMap(item -> {
+            if (item.length() > 3) {
+                return Flux.just(item).log();
+            } else {
+                return Flux.just(item).flatMap(sub -> Flux.just(sub.split(""))).log();
+            }
+        });
     }
 
 
