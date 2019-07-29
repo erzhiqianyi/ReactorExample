@@ -1389,10 +1389,52 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ![](svg/switchMap.svg)
 
 ##### repeat
+- 重复一个序列
+```java
+	public final Flux<T> repeat() {
+		return repeat(ALWAYS_BOOLEAN_SUPPLIER);
+	}
+```
+![](svg/repeatForFlux.svg)
+
+```java
+	public final Flux<T> repeat() {
+		return repeat(Flux.ALWAYS_BOOLEAN_SUPPLIER);
+	}
+
+```
+![](svg/repeatForMono.svg)
+
 ##### interval
+- 以一定时间间隔重复序列 
+```java
+	public static Flux<Long> interval(Duration period) {
+		return interval(period, Schedulers.parallel());
+	}
+```
+![](svg/interval.svg)
+
 ##### defaultIfEmpty
+- 如果序列为空，使用缺省值代替
+```java
+	public final Flux<T> defaultIfEmpty(T defaultV) {
+		return onAssembly(new FluxDefaultIfEmpty<>(this, defaultV));
+	}
+```
+![](svg/defaultIfEmpty.svg)
+
 ##### switchIfEmpty 
+- 用缺省的序列来代替 
+```java
+
+```
+![](svg/switchIfEmptyForMono.svg)
+
+```java
+```
+![](svg/switchIfEmptyForFlux.svg)
 ##### ignoreElements
+- 忽略元素 
 ##### then
 ##### thenEmpty 
 ##### thenReturn
@@ -1403,12 +1445,7 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ##### reduce 
 ##### scan 
 
-由一个序列触发（类似于 flatMap，不过“喜新厌旧”）：switchMap
-由每个新序列开始时触发（也是“喜新厌旧”风格）：switchOnNext
-我想重复一个序列：repeat
 
-…但是以一定的间隔重复：Flux.interval(duration).flatMap(tick -> myExistingPublisher)
-我有一个空序列，但是…
 
 我想要一个缺省值来代替：defaultIfEmpty
 我想要一个缺省的序列来代替：switchIfEmpty

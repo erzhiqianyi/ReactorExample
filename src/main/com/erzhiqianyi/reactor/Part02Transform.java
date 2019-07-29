@@ -363,6 +363,42 @@ public class Part02Transform {
         return Flux.switchOnNext(fluxFlux);
     }
 
+    /**
+     * 使用 {@link Flux#repeat()} 重复一个序列
+     */
+    Flux<String> repeatFlux(Flux<String> flux) {
+        return flux.repeat();
+    }
+
+    /**
+     * 使用 {@link Mono#repeat()} 重复一个Mono
+     */
+    Flux<String> repeatMono(Mono<String> mono) {
+        return mono.repeat();
+    }
+
+    /**
+     * 使用 {@link Flux#interval(Duration)}  以一定时间间隔发出序列
+     */
+    Flux<Long> interval() {
+        return Flux.interval(Duration.ofSeconds(1));
+    }
+    /**
+     * 使用 {@link Flux#defaultIfEmpty(Object)}  如果序列为空,使用缺省值代替
+     */
+    Mono<String> monoDefaultIfEmpty(Mono<String> mono) {
+        return mono.defaultIfEmpty("default");
+    }
+
+    /**
+     * 使用 {@link Mono#defaultIfEmpty(Object)}  如果序列为空,使用缺省值代替
+     */
+    Flux<String> fluxDefaultIfEmpty(Flux<String> flux) {
+        return flux.defaultIfEmpty("default");
+    }
+
+
+
 
     private Mono<String> withDelay(Mono<String> userMono, Integer duration) {
         return Mono

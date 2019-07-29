@@ -4,6 +4,7 @@ import com.erzhiqianyi.reactor.domain.User;
 import com.erzhiqianyi.reactor.domain.VipUser;
 import com.erzhiqianyi.reactor.repository.ReactiveRepository;
 import com.erzhiqianyi.reactor.repository.ReactiveUserRepository;
+import com.sun.org.apache.bcel.internal.generic.MONITORENTER;
 import org.junit.Before;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
@@ -13,9 +14,6 @@ import reactor.util.function.Tuple2;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -490,9 +488,50 @@ public class Part02TransformTest {
                         "outer: 1 - inner: 7",
                         "outer: 1 - inner: 8",
                         "outer: 2 - inner: 0"
-                        )
+                )
                 .verifyComplete();
 
-   }
+    }
+
+    @Test
+    public void repeatFlux() {
+        Flux<String> flux = Flux.just("one");
+        Flux<String> repeatFlux = part02Transform.repeatFlux(flux).take(4).log();
+        StepVerifier.create(repeatFlux)
+                .expectNext("one", "one", "one", "one")
+                .verifyComplete();
+    }
+
+    @Test
+    public void repeatMono() {
+        Mono<String> mono = Mono.just("one");
+        Flux<String> repeatFlux = part02Transform.repeatMono(mono).take(4).log();
+        StepVerifier.create(repeatFlux)
+                .expectNext("one", "one", "one", "one")
+                .verifyComplete();
+    }
+
+    @Test
+    public void interval() {
+        StepVerifier.create(part02Transform.interval().take(5).log())
+                .expectNext(0l, 1l, 2l, 3l, 4l)
+                .verifyComplete();
+    }
+
+    @Test
+    public void monoDefaultIfEmpty() {
+        Flux<String> empty = Flux.empty();
+        StepVerifier.create(part02Transform.fluxDefaultIfEmpty(empty).log())
+                .expectNext("default")
+                .verifyComplete();
+    }
+
+    @Test
+    public void fluxDefaultIfEmpty() {
+        Mono<String> empty = Mono.empty();
+        StepVerifier.create(part02Transform.monoDefaultIfEmpty(empty).log())
+                .expectNext("default")
+                .verifyComplete();
+    }
 }
 
