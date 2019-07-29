@@ -351,16 +351,12 @@ public class Part02Transform {
         });
     }
     /**
-     * 使用 {@link Flux#switchOnNext(Publisher)} 由一个序列触发，
+     * 使用 {@link Flux#switchOnNext(Publisher)}
+     * 从最新的发布者那里获取事件，如果有新的发布者加入，则改用新的发布者。
+     * 当最后一个发布者完成所有发布事件，并且没有发布者加入，则flux完成。
      */
-    Flux<String> switchMap(Flux<String> flux) {
-        return flux.log().switchMap(item -> {
-            if (item.length() > 3) {
-                return Flux.just(item).log();
-            } else {
-                return Flux.just(item).flatMap(sub -> Flux.just(sub.split(""))).log();
-            }
-        });
+    Flux<String> switchOnNext() {
+        return null;
     }
 
 

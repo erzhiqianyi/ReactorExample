@@ -1379,8 +1379,12 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ![](svg/switchMap.svg)
 
 ##### switchOnNext
-```
-
+- 从最新的发布者那里获取事件，如果有新的发布者加入，则改用新的发布者。
+当最后一个发布者完成所有发布事件，并且没有发布者加入，则flux完成。
+```java
+	public static <T> Flux<T> switchOnNext(Publisher<? extends Publisher<? extends T>> mergedPublishers) {
+		return switchOnNext(mergedPublishers, Queues.XS_BUFFER_SIZE);
+	}
 ```
 ![](svg/switchMap.svg)
 

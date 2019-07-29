@@ -463,5 +463,10 @@ public class Part02TransformTest {
         flux = part02Transform.switchMap(flux);
         flux.subscribe(System.out::println);
     }
+
+    @Test
+    public void  switchOnNext(){
+
+    }
 }
 
