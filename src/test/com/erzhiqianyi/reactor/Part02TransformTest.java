@@ -13,6 +13,8 @@ import reactor.util.function.Tuple2;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -459,14 +461,38 @@ public class Part02TransformTest {
 
     @Test
     public void switchMap() {
-        Flux<String> flux = Flux.just("one","two","three","four","five","six");
+        Flux<String> flux = Flux.just("one", "two", "three", "four", "five", "six");
         flux = part02Transform.switchMap(flux);
         flux.subscribe(System.out::println);
     }
 
     @Test
-    public void  switchOnNext(){
+    public void switchOnNext() {
+        Flux<String> flux = part02Transform.switchOnNext().log();
+        StepVerifier.create(flux)
+                .expectNext(
+                        "outer: 0 - inner: 0",
+                        "outer: 0 - inner: 1",
+                        "outer: 0 - inner: 2",
+                        "outer: 0 - inner: 3",
+                        "outer: 0 - inner: 4",
+                        "outer: 0 - inner: 5",
+                        "outer: 0 - inner: 6",
+                        "outer: 0 - inner: 7",
+                        "outer: 0 - inner: 8",
+                        "outer: 1 - inner: 0",
+                        "outer: 1 - inner: 1",
+                        "outer: 1 - inner: 2",
+                        "outer: 1 - inner: 3",
+                        "outer: 1 - inner: 4",
+                        "outer: 1 - inner: 5",
+                        "outer: 1 - inner: 6",
+                        "outer: 1 - inner: 7",
+                        "outer: 1 - inner: 8",
+                        "outer: 2 - inner: 0"
+                        )
+                .verifyComplete();
 
-    }
+   }
 }
 
