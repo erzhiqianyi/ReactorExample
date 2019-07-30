@@ -1426,11 +1426,18 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ##### switchIfEmpty 
 - 用缺省的序列来代替 
 ```java
+	public final Mono<T> switchIfEmpty(Mono<? extends T> alternate) {
+		return onAssembly(new MonoSwitchIfEmpty<>(this, alternate));
+	}
 
 ```
 ![](svg/switchIfEmptyForMono.svg)
 
 ```java
+	public final Flux<T> switchIfEmpty(Publisher<? extends T> alternate) {
+		return onAssembly(new FluxSwitchIfEmpty<>(this, alternate));
+	}
+
 ```
 ![](svg/switchIfEmptyForFlux.svg)
 ##### ignoreElements

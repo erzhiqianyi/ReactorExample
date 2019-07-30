@@ -383,6 +383,7 @@ public class Part02Transform {
     Flux<Long> interval() {
         return Flux.interval(Duration.ofSeconds(1));
     }
+
     /**
      * 使用 {@link Flux#defaultIfEmpty(Object)}  如果序列为空,使用缺省值代替
      */
@@ -398,6 +399,19 @@ public class Part02Transform {
     }
 
 
+    /**
+     * 使用 {@link Mono#switchIfEmpty(Mono)}  如果序列为空,使用缺省值代替
+     */
+    Mono<String> switchIfEmptyMono(Mono<String> mono) {
+        return mono.switchIfEmpty(Mono.just("alternative"));
+    }
+
+    /**
+     * 使用 {@link Flux#switchIfEmpty(Publisher)}   如果序列为空,使用缺省值代替
+     */
+    Flux<String> switchIfEmptyFlux(Flux<String> flux) {
+        return flux.switchIfEmpty(Mono.just("alternative"));
+    }
 
 
     private Mono<String> withDelay(Mono<String> userMono, Integer duration) {

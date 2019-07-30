@@ -533,5 +533,24 @@ public class Part02TransformTest {
                 .expectNext("default")
                 .verifyComplete();
     }
+
+    @Test
+    public void switchIfEmptyMono() {
+        Mono<String> empty = Mono.empty();
+        StepVerifier.create(part02Transform.switchIfEmptyMono(empty).log())
+                .expectNext("alternative")
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void switchIfEmptyFlux() {
+        Flux<String> empty = Flux.empty();
+        StepVerifier.create(part02Transform.switchIfEmptyFlux(empty).log())
+                .expectNext("alternative")
+                .verifyComplete();
+
+    }
+
 }
 
