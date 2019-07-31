@@ -413,6 +413,67 @@ public class Part02Transform {
         return flux.switchIfEmpty(Mono.just("alternative"));
     }
 
+    /**
+     * 使用 {@link Mono#ignoreElement()}  忽略元素
+     */
+    Mono<String> ignoreElementMono(Mono<String> mono) {
+        return mono.ignoreElement();
+    }
+
+    /**
+     * 使用 {@link Flux#ignoreElements()} 忽略元素
+     */
+    Mono<String> ignoreElementFlux(Flux<String> flux) {
+        return flux.ignoreElements();
+    }
+
+
+    /**
+     * 使用 {@link Mono#then()} 表示序列结束
+     */
+    Mono<Void> thenMono(Mono<String> mono) {
+        return mono.then();
+    }
+
+    /**
+     * 使用 {@link Flux#then()} 表示序列结束
+     *
+     */
+    Mono<Void> thenFlux(Flux<String> flux) {
+        return flux.then();
+    }
+
+    /**
+     * 使用 {@link Mono#then(Mono)} 表示序列结束 , 并返回一个结果
+     *
+     */
+    Mono<String> thenMono(Mono<String> mono,Mono<String> other) {
+        return mono.then(other);
+    }
+
+    /**
+     * 使用 {@link Flux#then(Mono)} 表示序列结束，并返回一个结果
+     */
+    Mono<String> thenFlux(Flux<String> flux,Mono<String> other) {
+        return flux.then(other);
+    }
+
+    /**
+     * 使用 {@link Mono#thenEmpty(Publisher)}
+     */
+    Mono<Void> thenEmptyMono(Mono<String> mono,Mono<Void> other) {
+        return mono.thenEmpty(other);
+    }
+
+    /**
+     * 使用 {@link Flux#thenEmpty(Publisher)}
+     */
+    Mono<Void> thenEmptyFlux(Flux<String> flux,Mono<Void> other) {
+        return flux.thenEmpty(other);
+    }
+
+
+
 
     private Mono<String> withDelay(Mono<String> userMono, Integer duration) {
         return Mono

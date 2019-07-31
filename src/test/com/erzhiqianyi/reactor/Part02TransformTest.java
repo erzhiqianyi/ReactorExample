@@ -7,6 +7,7 @@ import com.erzhiqianyi.reactor.repository.ReactiveUserRepository;
 import com.sun.org.apache.bcel.internal.generic.MONITORENTER;
 import org.junit.Before;
 import org.junit.Test;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -551,6 +552,80 @@ public class Part02TransformTest {
                 .verifyComplete();
 
     }
+
+    @Test
+    public void ignoreElementMono() {
+        Mono<String> mono = Mono.justOrEmpty("one");
+        StepVerifier.create(part02Transform.ignoreElementMono(mono).log())
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void ignoreElementFlux() {
+        Flux<String> mono = Flux.just("one");
+        StepVerifier.create(part02Transform.ignoreElementFlux(mono).log())
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void thenMonoEmpty() {
+        Mono<String> mono = Mono.just("one");
+        StepVerifier.create(part02Transform.thenMono(mono).log())
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void thenFluxEmpty() {
+        Flux<String> flux = Flux.just("one");
+        StepVerifier.create(part02Transform.thenFlux(flux).log())
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void thenMono() {
+        Mono<String> mono = Mono.just("one");
+        String other = "other";
+        StepVerifier.create(part02Transform.thenMono(mono, Mono.justOrEmpty(other)).log())
+                .expectNext(other)
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void thenFlux() {
+        Flux<String> flux = Flux.just("one");
+        String other = "other";
+        StepVerifier.create(part02Transform.thenFlux(flux, Mono.justOrEmpty(other)).log())
+                .expectNext(other)
+                .verifyComplete();
+
+    }
+
+
+    @Test
+    public void thenEmptyMono() {
+        Mono<String> mono = Mono.just("one").doOnNext(System.out::println);
+        Mono<Void> publisher = Mono.empty();
+        publisher.doOnNext(item -> System.out.println("publisher"));
+        StepVerifier.create(part02Transform.thenEmptyMono(mono, publisher).log())
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void thenEmptyFlux() {
+        Flux<String> flux = Flux.just("one").doOnNext(System.out::println);
+        Mono<Void> publisher = Mono.empty();
+        publisher.doOnNext(item -> System.out.println("publisher"));
+        StepVerifier.create(part02Transform.thenEmptyFlux(flux, publisher).log())
+                .verifyComplete();
+
+    }
+
 
 }
 

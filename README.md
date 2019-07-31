@@ -1442,8 +1442,68 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ![](svg/switchIfEmptyForFlux.svg)
 ##### ignoreElements
 - 忽略元素 
+```java
+	public final Mono<T> ignoreElement() {
+		return onAssembly(new MonoIgnoreElement<>(this));
+	}
+```
+![](svg/ignoreElementsForFlux.svg)
+
+![](svg/ignoreElementsForMono.svg)
 ##### then
+- 表示序列已经结束
+```java
+	public final Mono<Void> then() {
+		return empty(this);
+	}
+```
+![](svg/thenForMono.svg)
+
+```java
+	public final <V> Mono<V> then(Mono<V> other) {
+		if (this instanceof MonoIgnoreThen) {
+            MonoIgnoreThen<T> a = (MonoIgnoreThen<T>) this;
+            return a.shift(other);
+		}
+		return onAssembly(new MonoIgnoreThen<>(new Publisher[] { this }, other));
+	}
+
+```
+![](svg/thenWithMonoForMono.svg)
+
+```java
+	public final Mono<Void> then() {
+		@SuppressWarnings("unchecked")
+		Mono<Void> then = (Mono<Void>) new MonoIgnoreElements<>(this);
+		return Mono.onAssembly(then);
+	}
+```
+![](svg/thenForFlux.svg)
+
+```java
+	public final <V> Mono<V> then(Mono<V> other) {
+		return Mono.onAssembly(new MonoIgnoreThen<>(new Publisher[] { this }, other));
+	}
+```
+![](svg/thenWithMonoForFlux.svg)
+
 ##### thenEmpty 
+- 在序列结束后等待另一个任务完成
+```java
+	public final Mono<Void> thenEmpty(Publisher<Void> other) {
+		return then(fromDirect(other));
+	}
+
+```
+![](svg/thenEmptyForMono.svg)
+
+```java
+	public final Mono<Void> thenEmpty(Publisher<Void> other) {
+		return then(Mono.fromDirect(other));
+	}
+
+```
+![](svg/thenEmptyForFlux.svg)
 ##### thenReturn
 ##### thenMany
 ##### delayUntilOther
@@ -1453,12 +1513,6 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 ##### scan 
 
 
-
-我想要一个缺省值来代替：defaultIfEmpty
-我想要一个缺省的序列来代替：switchIfEmpty
-我有一个序列，但是我对序列的元素值不感兴趣：ignoreElements
-
-…并且我希望用 Mono 来表示序列已经结束：then
 …并且我想在序列结束后等待另一个任务完成：thenEmpty
 …并且我想在序列结束之后返回一个 Mono：Mono#then(mono)
 …并且我想在序列结束之后返回一个值：Mono#thenReturn(T)
