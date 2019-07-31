@@ -437,7 +437,6 @@ public class Part02Transform {
 
     /**
      * 使用 {@link Flux#then()} 表示序列结束
-     *
      */
     Mono<Void> thenFlux(Flux<String> flux) {
         return flux.then();
@@ -445,35 +444,68 @@ public class Part02Transform {
 
     /**
      * 使用 {@link Mono#then(Mono)} 表示序列结束 , 并返回一个结果
-     *
      */
-    Mono<String> thenMono(Mono<String> mono,Mono<String> other) {
+    Mono<String> thenMono(Mono<String> mono, Mono<String> other) {
         return mono.then(other);
     }
 
     /**
      * 使用 {@link Flux#then(Mono)} 表示序列结束，并返回一个结果
      */
-    Mono<String> thenFlux(Flux<String> flux,Mono<String> other) {
+    Mono<String> thenFlux(Flux<String> flux, Mono<String> other) {
         return flux.then(other);
     }
 
     /**
-     * 使用 {@link Mono#thenEmpty(Publisher)}
+     * 使用 {@link Mono#thenEmpty(Publisher)} 在序列结束后等待另一个任务完成
      */
-    Mono<Void> thenEmptyMono(Mono<String> mono,Mono<Void> other) {
+    Mono<Void> thenEmptyMono(Mono<String> mono, Mono<Void> other) {
         return mono.thenEmpty(other);
     }
 
     /**
-     * 使用 {@link Flux#thenEmpty(Publisher)}
+     * 使用 {@link Flux#thenEmpty(Publisher)} 在序列结束后等待另一个任务完成
      */
-    Mono<Void> thenEmptyFlux(Flux<String> flux,Mono<Void> other) {
+    Mono<Void> thenEmptyFlux(Flux<String> flux, Mono<Void> other) {
         return flux.thenEmpty(other);
     }
 
+    /**
+     * 使用 {@link Mono#thenReturn(Object)}  在序列结束后返回一个值
+     */
+    Mono<String> thenReturn(Mono<String> mono, String value) {
+        return mono.thenReturn(value);
+    }
 
+    /**
+     * 使用 {@link Mono#thenMany(Publisher)}   在序列结束后返回一个Flux
+     */
+    Flux<String> monoThenMany(Mono<String> mono, Flux<String> flux) {
+        return mono.thenMany(flux);
+    }
 
+    /**
+     * 使用 {@link Flux#thenMany(Publisher)}  在序列结束后返回一个Flux
+     */
+    Flux<String> fluxThenMany(Flux<String> flux, Flux<String> other) {
+        return flux.thenMany(other);
+    }
+
+    /**
+     * 使用 {@link Mono#delayUntil(Function)} 当有1个或N个其他 publishers 都发出时才完成
+     */
+    Mono<String> monoDelayUtil(Mono<String> mono) {
+        Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
+        return mono.delayUntil(a -> publisher);
+    }
+
+    /**
+     * 使用 {@link Flux#delayUntil(Function)}  当有1个或N个其他 publishers 都发出时才完成
+     */
+    Flux<String> fluxDelayUtil(Flux<String> flux) {
+        Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
+        return flux.delayUntil( a ->publisher);
+    }
 
     private Mono<String> withDelay(Mono<String> userMono, Integer duration) {
         return Mono

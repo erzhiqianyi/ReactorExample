@@ -613,7 +613,6 @@ public class Part02TransformTest {
         publisher.doOnNext(item -> System.out.println("publisher"));
         StepVerifier.create(part02Transform.thenEmptyMono(mono, publisher).log())
                 .verifyComplete();
-
     }
 
     @Test
@@ -623,9 +622,53 @@ public class Part02TransformTest {
         publisher.doOnNext(item -> System.out.println("publisher"));
         StepVerifier.create(part02Transform.thenEmptyFlux(flux, publisher).log())
                 .verifyComplete();
+    }
+
+    @Test
+    public void thenReturn() {
+        Mono<String> mono = Mono.just("one").doOnNext(System.out::println);
+        String value = "end";
+        StepVerifier.create(part02Transform.thenReturn(mono, value).log())
+                .expectNext(value)
+                .verifyComplete();
 
     }
 
 
+    @Test
+    public void monoThenMany() {
+        Mono<String> mono = Mono.just("one").doOnNext(System.out::println);
+        String[] values = {"two", "three"};
+        StepVerifier.create(part02Transform.monoThenMany(mono, Flux.fromArray(values)).log())
+                .expectNext(values)
+                .verifyComplete();
+    }
+
+    @Test
+    public void fluxThenMany() {
+        Flux<String> flux = Flux.just("one").doOnNext(System.out::println);
+        String[] values = {"two", "three"};
+        StepVerifier.create(part02Transform.fluxThenMany(flux, Flux.fromArray(values)).log())
+                .expectNext(values)
+                .verifyComplete();
+    }
+
+
+    @Test
+    public void monoDelayUtil() {
+        Mono<String> mono = Mono.just("one").doOnNext(System.out::println);
+        StepVerifier.create(part02Transform.monoDelayUtil(mono).log())
+                .expectNext("one")
+                .verifyComplete();
+    }
+
+    @Test
+    public void fluxDelayUtil() {
+        Flux<String> flux = Flux.just("one").doOnNext(System.out::println);
+        StepVerifier.create(part02Transform.fluxDelayUtil(flux).log())
+                .expectNext("one")
+                .verifyComplete();
+
+    }
 }
 

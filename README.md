@@ -69,7 +69,7 @@
 		- [thenEmpty](#thenEmpty) 
 		- [thenReturn](#thenReturn)
 		- [thenMany](#thenMany)
-		- [delayUntilOther](#delayUntilOther)
+		- [delayUntil](#delayUntil)
 		- [expand](#expand) 
 		- [expandDeep](#expandDeep)
 		- [reduce](#reduce)
@@ -1504,19 +1504,72 @@ Flux.just("url").flatMap(item -> Mono.fromCallable(
 
 ```
 ![](svg/thenEmptyForFlux.svg)
+
 ##### thenReturn
+- 序列结束后返回一个值 
+```java
+	public final <V> Mono<V> thenReturn(V value) {
+	    return then(Mono.just(value));
+	}
+
+```
+![](svg/thenReturn.svg)
+
 ##### thenMany
-##### delayUntilOther
+- 在序列结束后返回一个Flux
+```java
+	public final <V> Flux<V> thenMany(Publisher<V> other) {
+		@SuppressWarnings("unchecked")
+		Flux<V> concat = (Flux<V>)Flux.concat(ignoreElement(), other);
+		return Flux.onAssembly(concat);
+	}
+
+```
+![](svg/thenManyForMono.svg)
+
+```java
+	public final <V> Flux<V> thenMany(Publisher<V> other) {
+		if (this instanceof FluxConcatArray) {
+			@SuppressWarnings({ "unchecked" })
+			FluxConcatArray<T> fluxConcatArray = (FluxConcatArray<T>) this;
+			return fluxConcatArray.concatAdditionalIgnoredLast(other);
+		}
+
+		@SuppressWarnings("unchecked")
+		Flux<V> concat = (Flux<V>)concat(ignoreElements(), other);
+		return concat;
+	}
+k
+```
+![](svg/thenManyForFlux.svg)
+
+##### delayUntil
+- 当有1个或N个其他 publishers 都发出时才完成
+```java
+	public final Mono<T> delayUntil(Function<? super T, ? extends Publisher<?>> triggerProvider) {
+		Objects.requireNonNull(triggerProvider, "triggerProvider required");
+		if (this instanceof MonoDelayUntil) {
+			return ((MonoDelayUntil<T>) this).copyWithNewTriggerGenerator(false,triggerProvider);
+		}
+		return onAssembly(new MonoDelayUntil<>(this, triggerProvider));
+	}
+
+```
+![](svg/delayUntilForMono.svg)
+```java
+	public final Flux<T> delayUntil(Function<? super T, ? extends Publisher<?>> triggerProvider) {
+		return concatMap(v -> Mono.just(v)
+		                          .delayUntil(triggerProvider));
+	}
+
+```
+![](svg/delayUntilForFlux.svg)
 ##### expand 
 ##### expandDeep
 ##### reduce 
 ##### scan 
 
 
-…并且我想在序列结束后等待另一个任务完成：thenEmpty
-…并且我想在序列结束之后返回一个 Mono：Mono#then(mono)
-…并且我想在序列结束之后返回一个值：Mono#thenReturn(T)
-…并且我想在序列结束之后返回一个 Flux：thenMany
 我有一个 Mono 但我想延迟完成…
 
 …当有1个或N个其他 publishers 都发出（或结束）时才完成：Mono#delayUntilOther
