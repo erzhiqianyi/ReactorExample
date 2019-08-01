@@ -504,8 +504,47 @@ public class Part02Transform {
      */
     Flux<String> fluxDelayUtil(Flux<String> flux) {
         Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
-        return flux.delayUntil( a ->publisher);
+        return flux.delayUntil(a -> publisher);
     }
+
+    /**
+     * 使用 {@link Mono#expand(Function)}   当有1个或N个其他 publishers 都发出时才完成
+     */
+    Flux<Integer> monoExpand(Integer initial, Integer maxSize) {
+        return emitter(initial)
+                .expand(i -> {
+                    System.out.println("转换 " + i );
+                    return emitter(i+1);
+                });
+
+    }
+
+
+    /**
+     * 使用 {@link Flux#expand(Function)}  当有1个或N个其他 publishers 都发出时才完成
+     */
+    Flux<String> fluxExpand(Flux<String> flux) {
+        Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
+        return flux.delayUntil(a -> publisher);
+    }
+
+    /**
+     * 使用 {@link Mono#expandDeep(Function)}    当有1个或N个其他 publishers 都发出时才完成
+     */
+    Flux<String> monoExpandDeep(Flux<String> flux) {
+        Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
+        return flux.delayUntil(a -> publisher);
+    }
+
+
+    /**
+     * 使用 {@link Flux#expandDeep(Function)}   当有1个或N个其他 publishers 都发出时才完成
+     */
+    Flux<String> fluxExpandDeep(Flux<String> flux) {
+        Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
+        return flux.delayUntil(a -> publisher);
+    }
+
 
     private Mono<String> withDelay(Mono<String> userMono, Integer duration) {
         return Mono
@@ -513,5 +552,11 @@ public class Part02Transform {
                 .flatMap(c -> userMono)
                 .doOnNext(str -> System.out.println(" current " + str + " delay running " + System.currentTimeMillis()));
     }
+
+    private Mono<Integer> emitter(Integer param) {
+        return Mono.just(param)
+                .delayElement(Duration.ofMillis(100)); //delay to simulate http response
+    }
+
 
 }

@@ -1565,19 +1565,48 @@ k
 ```
 ![](svg/delayUntilForFlux.svg)
 ##### expand 
+- 广度优先扩展元素序列 
+```java
+	public final Flux<T> expand(Function<? super T, ? extends Publisher<? extends T>> expander,
+			int capacityHint) {
+		return Flux.onAssembly(new MonoExpand<>(this, expander, true, capacityHint));
+	}
+```
+[mono-expand](https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html#expand-java.util.function.Function-)
+
+```java
+	public final Flux<T> expand(Function<? super T, ? extends Publisher<? extends T>> expander,
+			int capacityHint) {
+		return Flux.onAssembly(new FluxExpand<>(this, expander, true, capacityHint));
+	}
+```
+[flux-expand](https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#expand-java.util.function.Function-)
+
 ##### expandDeep
+- 深度优先扩元素扩展序列
+```java
+	public final Flux<T> expandDeep(Function<? super T, ? extends Publisher<? extends T>> expander,
+			int capacityHint) {
+		return Flux.onAssembly(new MonoExpand<>(this, expander, false, capacityHint));
+	}
+
+```
+[mono-expand](https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html#expandDeep-java.util.function.Function-)
+
+```java
+	public final Flux<T> expandDeep(Function<? super T, ? extends Publisher<? extends T>> expander,
+			int capacityHint) {
+		return onAssembly(new FluxExpand<>(this, expander, false, capacityHint));
+	}
+```
+[flux-expand](https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#expandDeep-java.util.function.Function-)
+
+
 ##### reduce 
+
+
 ##### scan 
 
-
-我有一个 Mono 但我想延迟完成…
-
-…当有1个或N个其他 publishers 都发出（或结束）时才完成：Mono#delayUntilOther
-…使用一个函数式来定义如何获取“其他 publisher”：Mono#delayUntil(Function)
-我想基于一个递归的生成序列的规则扩展每一个元素，然后合并为一个序列发出：
-
-…广度优先：expand(Function)
-…深度优先：expandDeep(Function)
 --------------------- 
 #### 只读序列
 #### 过虑序列

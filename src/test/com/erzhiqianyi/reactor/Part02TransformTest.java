@@ -670,5 +670,14 @@ public class Part02TransformTest {
                 .verifyComplete();
 
     }
+
+    @Test
+    public void monoExpand() {
+        Flux<Integer> flux = part02Transform.monoExpand(1, 10).log();
+        StepVerifier.create(flux)
+                .expectNext(1,2,3,4)
+                .verifyComplete();
+
+    }
 }
 
