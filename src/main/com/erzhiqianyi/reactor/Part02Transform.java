@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -540,6 +541,21 @@ public class Part02Transform {
         //todo 暂时没想到使用场景
         return null;
     }
+
+    /**
+     * 使用 {@link Flux#reduce(BiFunction)} 对流中包含的所有元素进行累积操作，得到一个包含计算结果的 Mono 序列
+     */
+    Mono<String> reduce(Flux<String> flux) {
+        return flux.reduce((x,y) -> x+","+y).doOnNext(System.out::println);
+    }
+    /**
+     * 使用 {@link Flux#scan(BiFunction)} 对流中包含的所有元素进行累积操作，并立即发出 reduce 结果
+     */
+    Flux<String> scan(Flux<String> flux) {
+        return flux.scan((x,y) -> x+","+y).doOnNext(System.out::println);
+    }
+
+
 
 
     private Mono<String> withDelay(Mono<String> userMono, Integer duration) {

@@ -674,5 +674,23 @@ public class Part02TransformTest {
     public void monoExpand() {
         //todo 暂时没想到使用场景
     }
+
+    @Test
+    public void reduce() {
+        Flux<String> flux = Flux.just("a", "b", "c", "d");
+        StepVerifier.create(part02Transform.reduce(flux).log())
+                .expectNext("a,b,c,d")
+                .verifyComplete();
+    }
+
+    @Test
+    public void scan() {
+        Flux<String> flux = Flux.just("a", "b", "c", "d");
+        StepVerifier.create(part02Transform.scan(flux).log())
+                .expectNext("a","a,b","a,b,c","a,b,c,d")
+                .verifyComplete();
+    }
+
+
 }
 

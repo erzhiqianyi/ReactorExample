@@ -1603,9 +1603,27 @@ k
 
 
 ##### reduce 
+- 对流中包含的所有元素进行累积操作，得到一个包含计算结果的 Mono 序列 ,和 ```Stream``` 中的 ```reduce```类似。
+```java
+	public final Mono<T> reduce(BiFunction<T, T, T> aggregator) {
+		if (this instanceof Callable){
+			@SuppressWarnings("unchecked")
+			Callable<T> thiz = (Callable<T>)this;
+		    return convertToMono(thiz);
+		}
+	    return Mono.onAssembly(new MonoReduce<>(this, aggregator));
+	}
 
+```
+![](svg/reduce.svg)
 
 ##### scan 
+- 
+```java
+
+```
+![](svg/scan.svg)
+
 
 --------------------- 
 #### 只读序列
