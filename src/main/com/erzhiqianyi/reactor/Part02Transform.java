@@ -508,41 +508,37 @@ public class Part02Transform {
     }
 
     /**
-     * 使用 {@link Mono#expand(Function)}   当有1个或N个其他 publishers 都发出时才完成
+     * 使用 {@link Mono#expand(Function)}
      */
     Flux<Integer> monoExpand(Integer initial, Integer maxSize) {
-        return emitter(initial)
-                .expand(i -> {
-                    System.out.println("转换 " + i );
-                    return emitter(i+1);
-                });
-
+        //todo 暂时没想到使用场景
+        return null;
     }
 
 
     /**
-     * 使用 {@link Flux#expand(Function)}  当有1个或N个其他 publishers 都发出时才完成
+     * 使用 {@link Flux#expand(Function)}
      */
     Flux<String> fluxExpand(Flux<String> flux) {
-        Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
-        return flux.delayUntil(a -> publisher);
+        //todo 暂时没想到使用场景
+        return null;
     }
 
     /**
-     * 使用 {@link Mono#expandDeep(Function)}    当有1个或N个其他 publishers 都发出时才完成
+     * 使用 {@link Mono#expandDeep(Function)}
      */
     Flux<String> monoExpandDeep(Flux<String> flux) {
-        Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
-        return flux.delayUntil(a -> publisher);
+        //todo 暂时没想到使用场景
+        return null;
     }
 
 
     /**
-     * 使用 {@link Flux#expandDeep(Function)}   当有1个或N个其他 publishers 都发出时才完成
+     * 使用 {@link Flux#expandDeep(Function)}
      */
     Flux<String> fluxExpandDeep(Flux<String> flux) {
-        Publisher<String> publisher = Mono.fromRunnable(() -> System.out.println("任务执行完毕"));
-        return flux.delayUntil(a -> publisher);
+        //todo 暂时没想到使用场景
+        return null;
     }
 
 

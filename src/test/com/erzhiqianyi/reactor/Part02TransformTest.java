@@ -668,16 +668,11 @@ public class Part02TransformTest {
         StepVerifier.create(part02Transform.fluxDelayUtil(flux).log())
                 .expectNext("one")
                 .verifyComplete();
-
     }
 
     @Test
     public void monoExpand() {
-        Flux<Integer> flux = part02Transform.monoExpand(1, 10).log();
-        StepVerifier.create(flux)
-                .expectNext(1,2,3,4)
-                .verifyComplete();
-
+        //todo 暂时没想到使用场景
     }
 }
 
