@@ -75,6 +75,7 @@
 		- [reduce](#reduce)
 		- [scan](#scan)
     - [只读序列](#只读序列)
+		- [doOnNext](#doOnNext)
     - [过虑序列](#过虑序列)
     - [错误处理](#错误处理)
     - [基于时间的操作](#基于时间的操作)
@@ -1625,8 +1626,48 @@ k
 ![](svg/scan.svg)
 
 
---------------------- 
 #### 只读序列
+不改变序列,进行操作
+##### doOnNext
+- 发出元素，可以进行操作，建议不要在操作中修改元素状态
+```java
+	public final Flux<T> doOnNext(Consumer<? super T> onNext) {
+		Objects.requireNonNull(onNext, "onNext");
+		return doOnSignal(this, null, onNext, null, null, null, null, null);
+	}
+```
+![](svg/doOnNextForFlux.svg)
+##### doOnComplete 
+- 序列完成时执行操作
+```java
+	public final Flux<T> doOnComplete(Runnable onComplete) {
+		Objects.requireNonNull(onComplete, "onComplete");
+		return doOnSignal(this, null, null, null, onComplete, null, null, null);
+	}
+```
+![](svg/doOnComplete.svg)
+
+##### doOnSuccess
+- 序列完成
+##### doOnError
+- 因错误终止
+##### doOnCancel
+- 取消
+##### doOnSubscribe
+- 订阅时
+##### doOnRequest
+- 请求时
+##### doOnTerminate
+- 完成或错误终止：（Mono的方法可能包含有结果） 
+##### doAfterTerminate 
+- 但是在终止信号向下游传递 
+##### doOnEach
+- 所有类型的信号（Signal）：Flux#
+##### doFinally
+- 所有结束的情况（完成complete、错误error、取消cancel）：
+##### log
+- 记录日志
+
 #### 过虑序列
 #### 错误处理
 #### 基于时间的操作
@@ -1682,7 +1723,7 @@ k
         clock.subscribe(System.out::println);
     }
 ```
-### 参考文章
+### 参考内容
 本文参考了以下内容
 - [Reactor文档](https://projectreactor.io/learn)
 - [使用 Reactor 进行反应式编程](https://www.ibm.com/developerworks/cn/java/j-cn-with-reactor-response-encode/index.html)
