@@ -1,6 +1,7 @@
 package com.erzhiqianyi.reactor;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
 
@@ -17,8 +18,30 @@ public class Part03Read {
      * 使用 {@link Flux#doOnComplete(Runnable)}
      */
     Flux<String> doOnComplete(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.doOnComplete( () -> System.out.println(" do on complete ") );
     }
+
+    /**
+     * 使用 {@link Mono#doOnSuccess(Consumer)}
+     */
+    Mono<String> doOnSuccess(Mono<String> mono) {
+        return mono.doOnSuccess( item -> System.out.println(" do on success " + item));
+    }
+
+    /**
+     * 使用 {@link Mono#doOnError(Consumer)} 发生错误时终止
+     */
+    Mono<String> monoDoOnError(Mono<String> mono) {
+        return mono.doOnError( item -> System.out.println(" on error " + item.getMessage() ));
+    }
+
+    /**
+     * 使用 {@link Flux#doOnError(Consumer)} 发生错误时终止
+     */
+    Flux<String> fluxDoOnError(Flux<String> flux) {
+        return flux.doOnError( item -> System.out.println(" on error:  " + item.getMessage() ));
+    }
+
 
 
 

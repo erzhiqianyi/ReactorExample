@@ -1648,9 +1648,33 @@ k
 ![](svg/doOnComplete.svg)
 
 ##### doOnSuccess
-- 序列完成
+- 序列执行成功执行操作
+```java
+	public final Flux<T> doOnComplete(Runnable onComplete) {
+		Objects.requireNonNull(onComplete, "onComplete");
+		return doOnSignal(this, null, null, null, onComplete, null, null, null);
+	}
+```
+![](svg/doOnSuccess.svg)
+
 ##### doOnError
 - 因错误终止
+```java
+	public final Mono<T> doOnError(Consumer<? super Throwable> onError) {
+		Objects.requireNonNull(onError, "onError");
+		return doOnSignal(this, null, null, onError, null, null, null);
+	}
+
+```
+![](svg/doOnErrorWithClassPredicateForMono.svg)
+
+```java
+	public final Flux<T> doOnError(Consumer<? super Throwable> onError) {
+		Objects.requireNonNull(onError, "onError");
+		return doOnSignal(this, null, null, onError, null, null, null, null);
+	}
+```
+![](svg/doOnErrorForFlux.svg)
 ##### doOnCancel
 - 取消
 ##### doOnSubscribe
