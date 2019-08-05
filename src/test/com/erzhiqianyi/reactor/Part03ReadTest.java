@@ -1,13 +1,14 @@
 package com.erzhiqianyi.reactor;
 
-import lombok.ToString;
 import org.junit.Before;
 import org.junit.Test;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.test.StepVerifier;
-
-import java.util.function.Consumer;
 
 public class Part03ReadTest {
 
@@ -48,7 +49,7 @@ public class Part03ReadTest {
     @Test
     public void monoDoOnError() {
         Mono<String> mono = Mono.just("one")
-                .doOnNext(item ->  item.substring(1,100));
+                .doOnNext(item -> item.substring(1, 100));
         mono = part03Read.monoDoOnError(mono).log();
         StepVerifier.create(mono)
                 .expectError(StringIndexOutOfBoundsException.class)
@@ -59,11 +60,27 @@ public class Part03ReadTest {
     public void fluxDoOnError() {
         String[] array = {"one", "two", "three", "four", "five"};
         Flux<String> flux = part03Read.fluxDoOnError(Flux.fromArray(array)
-                .doOnNext(item -> item.substring(1,100)))
+                .doOnNext(item -> item.substring(1, 100)))
                 .log();
         StepVerifier.create(flux)
                 .expectError(StringIndexOutOfBoundsException.class)
                 .verify();
+
+    }
+
+    @Test
+    public void monoDoOnCancel() {
+        Mono<String> mono = Mono.just("one");
+        mono = part03Read.monoDoOnCancel(mono).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+
+    }
+
+
+    @Test
+    public void fluxDoOnCancel() {
 
     }
 

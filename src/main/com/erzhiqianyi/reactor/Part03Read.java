@@ -43,8 +43,20 @@ public class Part03Read {
     }
 
 
+    /**
+     * 使用 {@link Mono#doOnCancel(Runnable)}
+     */
+    Mono<String> monoDoOnCancel(Mono<String> mono) {
+        return mono.doOnCancel( () -> System.out.println("cancel"));
+    }
 
 
+    /**
+     * 使用 {@link Flux#doOnCancel(Runnable)} (Runnable)}
+     */
+    Flux<String> fluxDoOnCancel(Flux<String> flux) {
+        return flux.doOnCancel( () -> System.out.println("cancel") );
+    }
 
 
 }

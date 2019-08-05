@@ -1676,7 +1676,24 @@ k
 ```
 ![](svg/doOnErrorForFlux.svg)
 ##### doOnCancel
-- 取消
+- 在取消时执行操作
+```java
+	public final Mono<T> doOnCancel(Runnable onCancel) {
+		Objects.requireNonNull(onCancel, "onCancel");
+		return doOnSignal(this, null, null, null, null, null, onCancel);
+	}
+```
+![](svg/doOnCancelForMono.svg)
+
+```java
+	public final Flux<T> doOnCancel(Runnable onCancel) {
+		Objects.requireNonNull(onCancel, "onCancel");
+		return doOnSignal(this, null, null, null, null, null, null, onCancel);
+	}
+
+```
+![](svg/doOnCancelForFlux.svg)
+
 ##### doOnSubscribe
 - 订阅时
 ##### doOnRequest
