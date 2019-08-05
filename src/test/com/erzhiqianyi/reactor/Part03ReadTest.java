@@ -10,6 +10,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.test.StepVerifier;
 
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.LongConsumer;
+
 public class Part03ReadTest {
 
     private Part03Read part03Read;
@@ -81,6 +85,129 @@ public class Part03ReadTest {
 
     @Test
     public void fluxDoOnCancel() {
+        String[] array = {"one", "two", "three", "four", "five"};
+        Flux<String> flux = part03Read.fluxDoOnCancel(
+                Flux.fromArray(array)
+                        .log());
+        StepVerifier.create(flux)
+                .expectNext(array)
+                .verifyComplete();
+    }
+
+    @Test
+    public void monoDoOnSubscribe() {
+        Mono<String> mono = Mono.just("one");
+        mono = part03Read.monoDoOnSubscribe(mono).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void fluxDoOnSubscribe() {
+        String[] array = {"one", "two", "three", "four", "five"};
+        Flux<String> flux = part03Read.fluxDoOnSubscribe(
+                Flux.fromArray(array).log());
+        StepVerifier.create(flux)
+                .expectNext(array)
+                .verifyComplete();
+    }
+
+
+    @Test
+    public void monoOnRequest() {
+        Mono<String> mono = Mono.just("one");
+        mono = part03Read.monoOnRequest(mono).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void fluxOnRequest() {
+        String[] array = {"one", "two", "three", "four", "five"};
+        Flux<String> flux = part03Read.fluxOnRequest(
+                Flux.fromArray(array).log());
+        StepVerifier.create(flux)
+                .expectNext(array)
+                .verifyComplete();
+    }
+
+    @Test
+    public void monoDoOnTerminate() {
+        Mono<String> mono = Mono.just("one");
+        mono = part03Read.monoDoOnTerminate(mono).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+    }
+
+    @Test
+    public void fluxDoOnTerminate() {
+        String[] array = {"one", "two", "three", "four", "five"};
+        Flux<String> flux = part03Read.fluxDoOnTerminate(Flux.fromArray(array).log());
+        StepVerifier.create(flux)
+                .expectNext(array)
+                .verifyComplete();
+    }
+
+
+    @Test
+    public void monoDoAfterTerminate() {
+        Mono<String> mono = Mono.just("one");
+        mono = part03Read.monoDoAfterTerminate(mono).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+    }
+
+    @Test
+    public void fluxDoAfterTerminate() {
+        String[] array = {"one", "two", "three", "four", "five"};
+        Flux<String> flux = part03Read.fluxDoAfterTerminate(Flux.fromArray(array).log());
+        StepVerifier.create(flux)
+                .expectNext(array)
+                .verifyComplete();
+    }
+
+    @Test
+    public void monoDoOnEach() {
+        Mono<String> mono = Mono.just("one");
+        mono = part03Read.monoDoOnEach(mono).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void fluxDoOnEach() {
+        String[] array = {"one", "two", "three", "four", "five"};
+        Flux<String> flux = part03Read.fluxDoOnEach(Flux.fromArray(array).log());
+        StepVerifier.create(flux)
+                .expectNext(array)
+                .verifyComplete();
+    }
+
+
+    @Test
+    public void monoDoFinally() {
+        Mono<String> mono = Mono.just("one");
+        mono = part03Read.monoDoFinally(mono).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+    }
+
+    @Test
+    public void fluxDoFinally() {
+        String[] array = {"one", "two", "three", "four", "five"};
+        Flux<String> flux = part03Read.fluxDoFinally(Flux.fromArray(array).log());
+        StepVerifier.create(flux)
+                .expectNext(array)
+                .verifyComplete();
 
     }
 

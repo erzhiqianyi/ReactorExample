@@ -1695,19 +1695,179 @@ k
 ![](svg/doOnCancelForFlux.svg)
 
 ##### doOnSubscribe
-- 订阅时
+- 订阅时执行操作
+```java
+	public final Mono<T> doOnSubscribe(Consumer<? super Subscription> onSubscribe) {
+		Objects.requireNonNull(onSubscribe, "onSubscribe");
+		return doOnSignal(this, onSubscribe, null, null,  null, null, null);
+	}
+
+```
+
+```java
+	public final Flux<T> doOnSubscribe(Consumer<? super Subscription> onSubscribe) {
+		Objects.requireNonNull(onSubscribe, "onSubscribe");
+		return doOnSignal(this, onSubscribe, null, null, null, null, null, null);
+	}
+
+```
+![](svg/doOnSubscribe.svg)
+
 ##### doOnRequest
-- 请求时
+- 请求时执行操作
+```java
+	public final Mono<T> doOnRequest(final LongConsumer consumer) {
+		Objects.requireNonNull(consumer, "consumer");
+		return doOnSignal(this, null, null, null, null, consumer, null);
+	}
+
+```
+![](svg/doOnRequestForMono.svg)
+
+```java
+	public final Flux<T> doOnRequest(LongConsumer consumer) {
+		Objects.requireNonNull(consumer, "consumer");
+		return doOnSignal(this, null, null, null, null, null, consumer, null);
+	}
+
+```
+![](svg/doOnRequestForFlux.svg)
+
 ##### doOnTerminate
 - 完成或错误终止：（Mono的方法可能包含有结果） 
+```java
+	public final Mono<T> doOnTerminate(Runnable onTerminate) {
+		Objects.requireNonNull(onTerminate, "onTerminate");
+		return doOnSignal(this,
+				null,
+				null,
+				e -> onTerminate.run(),
+				onTerminate,
+				null,
+				null);
+	}
+```
+![](svg/doOnTerminateForMono.svg)
+
+```java
+	public final Flux<T> doOnTerminate(Runnable onTerminate) {
+		Objects.requireNonNull(onTerminate, "onTerminate");
+		return doOnSignal(this,
+				null,
+				null,
+				e -> onTerminate.run(),
+				onTerminate,
+				null,
+				null,
+				null);
+	}
+
+```
+![](svg/doOnTerminateForFlux.svg)
+
 ##### doAfterTerminate 
-- 但是在终止信号向下游传递 
+- 在终止信号向下游传递 
+```java
+	public final Mono<T> doAfterTerminate(Runnable afterTerminate) {
+		Objects.requireNonNull(afterTerminate, "afterTerminate");
+		return doAfterSuccessOrError((s, e)  -> afterTerminate.run());
+	}
+```
+![](svg/doAfterTerminateForMono.svg)
+
+```java
+	public final Flux<T> doAfterTerminate(Runnable afterTerminate) {
+		Objects.requireNonNull(afterTerminate, "afterTerminate");
+		return doOnSignal(this, null, null, null, null, afterTerminate, null, null);
+	}
+
+```
+![](svg/doAfterTerminateForFlux.svg)
+
 ##### doOnEach
-- 所有类型的信号（Signal）：Flux#
+- 对所有类型的信号执行操作
+```java
+	public final Mono<T> doOnEach(Consumer<? super Signal<T>> signalConsumer) {
+		Objects.requireNonNull(signalConsumer, "signalConsumer");
+		if (this instanceof Fuseable) {
+			return onAssembly(new MonoDoOnEachFuseable<>(this, signalConsumer));
+		}
+		return onAssembly(new MonoDoOnEach<>(this, signalConsumer));
+
+	}
+```
+![](svg/doOnEachForMono.svg)
+
+```java
+	public final Flux<T> doOnEach(Consumer<? super Signal<T>> signalConsumer) {
+		if (this instanceof Fuseable) {
+			return onAssembly(new FluxDoOnEachFuseable<>(this, signalConsumer));
+		}
+		return onAssembly(new FluxDoOnEach<>(this, signalConsumer));
+	}
+
+```
+![](svg/doOnEachForFlux.svg)
 ##### doFinally
-- 所有结束的情况（完成complete、错误error、取消cancel）：
+- 所有结束的情况（完成complete、错误error、取消cancel）执行操作 ：
+```java
+	public final Mono<T> doFinally(Consumer<SignalType> onFinally) {
+		Objects.requireNonNull(onFinally, "onFinally");
+		if (this instanceof Fuseable) {
+			return onAssembly(new MonoDoFinallyFuseable<>(this, onFinally));
+		}
+		return onAssembly(new MonoDoFinally<>(this, onFinally));
+	}
+
+```
+![](svg/doFinallyForMono.svg)
+
+```java
+	public final Flux<T> doFinally(Consumer<SignalType> onFinally) {
+		Objects.requireNonNull(onFinally, "onFinally");
+		if (this instanceof Fuseable) {
+			return onAssembly(new FluxDoFinallyFuseable<>(this, onFinally));
+		}
+		return onAssembly(new FluxDoFinally<>(this, onFinally));
+	}
+
+```
+![](svg/doFinallyForFlux.svg)
+
 ##### log
 - 记录日志
+```java
+	public final Mono<T> log(@Nullable String category,
+			Level level,
+			boolean showOperatorLine,
+			SignalType... options) {
+		SignalLogger<T> log = new SignalLogger<>(this, category, level,
+				showOperatorLine, options);
+
+		if (this instanceof Fuseable) {
+			return onAssembly(new MonoLogFuseable<>(this, log));
+		}
+		return onAssembly(new MonoLog<>(this, log));
+	}
+```
+![](svg/logForMono.svg)
+
+```java
+	public final Flux<T> log(@Nullable String category,
+			Level level,
+			boolean showOperatorLine,
+			SignalType... options) {
+		SignalLogger<T> log = new SignalLogger<>(this, category, level,
+				showOperatorLine, options);
+
+		if (this instanceof Fuseable) {
+			return onAssembly(new FluxLogFuseable<>(this, log));
+		}
+		return onAssembly(new FluxLog<>(this, log));
+	}
+j
+```
+![](svg/logForFlux.svg)
 
 #### 过虑序列
 #### 错误处理
