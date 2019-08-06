@@ -1,17 +1,46 @@
 package com.erzhiqianyi.reactor;
 
+import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class Part04FilterTest {
 
-    @Test
-    public void filter() {
+    private Part04Filter part04Filter;
+
+    @Before
+    public void init() {
+        part04Filter = new Part04Filter();
     }
 
     @Test
-    public void filterWhen() {
+    public void monoFilter() {
+        String foo = "foo";
+        Mono<String> mono = Mono.just(foo);
+        mono = part04Filter.monoFilter(mono.log());
+        StepVerifier.create(mono)
+                .expectNext(foo)
+                .verifyComplete();
+    }
+
+    @Test
+    public void fluxFilter() {
+        String[] array = {"one", "two", "three", "four", "five"};
+        Flux<String> flux = part04Filter.filter(Flux.fromArray(array)).log();
+        StepVerifier.create(flux)
+                .expectNext(array)
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void monoFilterWhen() {
+    }
+
+    @Test
+    public void fluxFilterWhen() {
     }
 
     @Test

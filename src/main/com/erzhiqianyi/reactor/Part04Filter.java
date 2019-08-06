@@ -3,6 +3,7 @@ package com.erzhiqianyi.reactor;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.util.function.Function;
@@ -11,16 +12,30 @@ import java.util.function.Predicate;
 public class Part04Filter {
 
     /**
-     * 使用 {@link Flux#filter(Predicate)}  对元素进行过滤
+     * 使用 {@link Mono#filter(Predicate)}  对元素进行过滤,返回元素为 "foo" 的元素
+     */
+    Mono<String> monoFilter(Mono<String> mono) {
+        return mono.filter(item -> item.equals("foo"));
+    }
+
+    /**
+     * 使用 {@link Flux#filter(Predicate)}  对元素进行过滤,过滤长度小于4 的元素
      */
     Flux<String> filter(Flux<String> flux) {
+        return flux.filter(item -> item.length() >= 4);
+    }
+
+    /**
+     * 使用 {@link Mono#filterWhen(Function)}   对元素进行异步过滤
+     */
+    Flux<String> monoFilterWhen(Flux<String> flux) {
         return flux.doOnNext(item -> System.out.println("do on next print value " + item));
     }
 
     /**
      * 使用 {@link Flux#filterWhen(Function)}   对元素进行异步过滤
      */
-    Flux<String> filterWhen(Flux<String> flux) {
+    Flux<String> fluxFilterWhen(Flux<String> flux) {
         return flux.doOnNext(item -> System.out.println("do on next print value " + item));
     }
 
