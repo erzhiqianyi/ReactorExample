@@ -6,6 +6,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -19,154 +20,155 @@ public class Part04Filter {
     }
 
     /**
-     * 使用 {@link Flux#filter(Predicate)}  对元素进行过滤,过滤长度小于4 的元素
+     * 使用 {@link Flux#filter(Predicate)}  对元素进行过滤,返回长度大于等于4 的元素
      */
     Flux<String> filter(Flux<String> flux) {
         return flux.filter(item -> item.length() >= 4);
     }
 
     /**
-     * 使用 {@link Mono#filterWhen(Function)}   对元素进行异步过滤
+     * 使用 {@link Mono#filterWhen(Function)}   对元素进行异步过滤,返回元素为 "foo" 的元素
      */
-    Flux<String> monoFilterWhen(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> monoFilterWhen(Mono<String> mono) {
+        return mono.filterWhen(s -> Mono.just(s.equals("foo")));
     }
 
     /**
-     * 使用 {@link Flux#filterWhen(Function)}   对元素进行异步过滤
+     * 使用 {@link Flux#filterWhen(Function)}   对元素进行异步过滤,返回长度大于等于4的元素
      */
     Flux<String> fluxFilterWhen(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.filterWhen(s -> Flux.just(s.length() >= 4));
     }
 
     /**
-     * 使用 {@link Mono#ofType(Class)} 判断指定类型对象
+     * 使用 {@link Mono#ofType(Class)} 判断指定类型对象, 判断元素是否为 String 类型
      */
-    Flux<String> monoOfType(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> monoOfType(Mono<Object> mono) {
+        return mono.ofType(String.class);
     }
 
 
     /**
-     * 使用 {@link Flux#ofType(Class)} 判断指定类型对象
+     * 使用 {@link Flux#ofType(Class)} 判断指定类型对象 判断元素是否为 String 类型
      */
-    Flux<String> fluxOfType(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Flux<String> fluxOfType(Flux<Object> flux) {
+        return flux.ofType(String.class);
     }
 
     /**
      * 使用 {@link Mono#ignoreElement()} 忽略所有元素
      */
-    Flux<String> monoIgnoreElement(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> monoIgnoreElement(Mono<String> mono) {
+        return mono.ignoreElement();
     }
 
 
     /**
      * 使用 {@link Flux#ignoreElements()} 忽略所有元素
      */
-    Flux<String> fluxIgnoreElements(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> fluxIgnoreElements(Flux<String> flux) {
+        return flux.ignoreElements();
     }
 
 
     /**
-     * 使用 {@link Flux#distinct()}  去重
+     * 使用 {@link Flux#distinct()}  去重,去除重复元素
      */
     Flux<String> distinct(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.distinct();
     }
 
     /**
      * 使用 {@link Flux#distinctUntilChanged()}   去除连续重复元素
      */
     Flux<String> distinctUntilChanged(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.distinctUntilChanged();
     }
 
     /**
-     * 使用 {@link Flux#take(long)} 从序列第一个元素开始取，取n个
+     * 使用 {@link Flux#take(long)} 从序列第一个元素开始取，取出前3个元素
      */
     Flux<String> takeByIndex(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.take(3);
     }
 
     /**
      * 使用 {@link Flux#take(Duration)} 取一段时间发出的元素
      */
     Flux<String> takeDuration(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.take(Duration.of(100, ChronoUnit.MILLIS));
     }
 
     /**
      * 使用 {@link Flux#next()} 取一个元素放到 Mono 中返回
      */
-    Flux<String> next(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> next(Flux<String> flux) {
+        return flux.next();
     }
 
     /**
      * 使用 {@link Flux#limitRequest(long)}
      */
     Flux<String> limitRequest(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.limitRequest(5);
     }
 
     /**
-     * 使用 {@link Flux#takeLast(int)} 从序列的最后一个元素倒数
+     * 使用 {@link Flux#takeLast(int)} 从序列的最后一个元素倒数,取出后5个元素
      */
     Flux<String> takeLast(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.takeLast(5);
     }
 
     /**
-     * 使用 {@link Flux#takeUntil(Predicate)}  直到满足条件时才取元素,基于判断条件
+     * 使用 {@link Flux#takeUntil(Predicate)}  直到满足条件时才取出之前元素,然会返回,基于判断条件,
+     * 取出 "foo" 元素之前的元素
      */
     Flux<String> takeUtil(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.takeUntil(item -> item.equalsIgnoreCase("foo"));
     }
 
     /**
-     * 使用 {@link Flux#takeUntilOther(Publisher)} 直到满足条件时才取元素,基于对 publihser 比较
+     * 使用 {@link Flux#takeUntilOther(Publisher)} 直到满足条件时才取元素,基于对 publisher 比较
      */
     Flux<String> takeUntilOther(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.takeUntilOther(Mono.delay(Duration.of(5, ChronoUnit.SECONDS)));
     }
 
     /**
-     * 使用 {@link Flux#elementAt(int)}  取给定序号元素
+     * 使用 {@link Flux#elementAt(int)}  取给定序号元素,取出序号为3的 元素,第一个元素为0
      */
-    Flux<String> elementAt(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> elementAt(Flux<String> flux) {
+        return flux.elementAt(3);
     }
 
     /**
-     * 使用 {@link Flux#last()}   如果序列为空则发出错误信号
+     * 使用 {@link Flux#last()}  获取最后一个元素， 如果序列为空则发出错误信号
      */
-    Flux<String> last(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> last(Flux<String> flux) {
+        return flux.last();
     }
 
     /**
      * 使用 {@link Flux#last(Object)} 如果序列为空则返回默认值
      */
-    Flux<String> lastDefault(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> lastDefault(Flux<String> flux) {
+        return flux.last("default");
     }
 
 
     /**
-     * 使用 {@link Flux#skip(long)} 从序列的第一个元素开始跳过
+     * 使用 {@link Flux#skip(long)} 从序列的第一个元素开始跳过, 跳过前三个元素
      */
     Flux<String> skipIndex(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.skip(2);
     }
 
     /**
      * 使用 {@link Flux#skip(Duration)} 跳过一段时间内发出的元素
      */
     Flux<String> skipDuration(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.skip(Duration.of(5,ChronoUnit.SECONDS));
     }
 
     /**
