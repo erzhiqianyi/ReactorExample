@@ -2313,6 +2313,77 @@ j
 ![](svg/singleOrEmpty.svg)
 
 #### 错误处理
+##### error
+- 抛出异常：error
+```java
+	public static <T> Mono<T> error(Throwable error) {
+		return onAssembly(new MonoError<>(error));
+	}k
+```
+```java
+	public static <O> Flux<O> error(Throwable throwable, boolean whenRequested) {
+		if (whenRequested) {
+			return onAssembly(new FluxErrorOnRequest<>(throwable));
+		}
+		else {
+			return onAssembly(new FluxError<>(throwable));
+		}
+	}
+```
+- 懒创建：error(Supplier<Throwable>)
+```java
+
+```
+
+```java
+```
+捕获异常：
+然后返回缺省值：onErrorReturn
+然后返回一个 Flux 或 Mono：onErrorResume
+包装异常后再抛出：.onErrorMap(t -> new RuntimeException(t))
+finally 代码块：doFinally
+Java 7 之后的 try-with-resources 写法：using 工厂方法
+我想从错误中恢复…
+
+
+#### timemout 
+- 如果元素超时未发出：timeout
+```java
+	public final Mono<T> timeout(Duration timeout, @Nullable Mono<? extends T> fallback,
+			Scheduler timer) {
+		final Mono<Long> _timer = Mono.delay(timeout, timer).onErrorReturn(0L);
+
+		if(fallback == null) {
+			return onAssembly(new MonoTimeout<>(this, _timer, timeout.toMillis() + "ms"));
+		}
+		return onAssembly(new MonoTimeout<>(this, _timer, fallback));
+	}
+```
+
+```java
+	public final <U, V> Flux<T> timeout(Publisher<U> firstTimeout,
+			Function<? super T, ? extends Publisher<V>> nextTimeoutFactory, Publisher<? extends T>
+			fallback) {
+		return onAssembly(new FluxTimeout<>(this, firstTimeout, nextTimeoutFactory,
+				fallback));
+	}
+```
+返回一个缺省的：
+的值：onErrorReturn
+Publisher：Flux#onErrorResume 和 Mono#onErrorResume
+重试：retry
+…由一个用于伴随 Flux 触发：retryWhen
+
+- 替换一个已完成的 Flux序列
+```java
+Flux.concat(flux, Flux.error(new IllegalStateException()));
+``` 
+
+- 替换一个已完成的 Mono
+```java
+ return mono.then(Mono.error(new IllegalStateException()));
+```
+#
 #### 基于时间的操作
 #### 拆分 Flux
 #### 回到同步的世界
