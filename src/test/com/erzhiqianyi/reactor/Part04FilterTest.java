@@ -208,6 +208,11 @@ public class Part04FilterTest {
 
     @Test
     public void skipIndex() {
+        String[] array = {"one", "one", "two", "foo", "two", "three", "four", "five"};
+        Flux<String> flux = part04Filter.skipIndex(Flux.fromArray(array)).log();
+        StepVerifier.create(flux)
+                .expectNext("two", "foo", "two", "three", "four", "five")
+                .verifyComplete();
 
     }
 
@@ -223,45 +228,112 @@ public class Part04FilterTest {
 
     @Test
     public void skipLast() {
+        String[] array = {"one",  "two", "three", "four", "five"};
+        Flux<String> flux = part04Filter.skipLast(Flux.fromArray(array)).log();
+        StepVerifier.create(flux)
+                .expectNext("one",  "two", "three")
+                .verifyComplete();
     }
 
     @Test
     public void skipUntil() {
+        String[] array = {"one",  "two", "three","foo", "four", "five"};
+        Flux<String> flux = part04Filter.skipUntil(Flux.fromArray(array)).log();
+        StepVerifier.create(flux)
+                .expectNext("foo", "four", "five")
+                .verifyComplete();
     }
 
     @Test
     public void skipUntilOther() {
+        Flux<String> flux = Flux.interval(Duration.ofSeconds(1)).map(item -> String.valueOf(item));
+        flux = part04Filter.skipUntilOther(flux).take(5).log();
+        StepVerifier.create(flux)
+                .expectNext("1","2","3","4","5")
+                .verifyComplete();
+
     }
 
     @Test
     public void skipWhile() {
+        String[] array = {"one",  "two", "three","foo", "four", "five"};
+        Flux<String> flux = part04Filter.skipWhile(Flux.fromArray(array)).log();
+        StepVerifier.create(flux)
+                .expectNext("one",  "two", "three","foo","four","five")
+                .verifyComplete();
     }
 
     @Test
     public void sampleDuration() {
+        Flux<String> flux = Flux.interval(Duration.ofSeconds(1)).map(item -> String.valueOf(item));
+        flux = part04Filter.sampleDuration(flux).take(2).log();
+        StepVerifier.create(flux)
+                .expectNext("1","4")
+                .verifyComplete();
     }
 
     @Test
     public void samplePublisher() {
+        String[] array = {"one",  "two", "three","foo", "four", "five"};
+        Flux<String> flux = part04Filter.samplePublisher(Flux.fromArray(array)).log();
+        StepVerifier.create(flux)
+                .verifyComplete();
+
     }
 
     @Test
     public void sampleFirst() {
+        Flux<String> flux = Flux.interval(Duration.ofSeconds(1)).map(item -> String.valueOf(item));
+        flux = part04Filter.sampleFirst(flux).take(3).log();
+        StepVerifier.create(flux)
+                .expectNext("0","3","6")
+                .verifyComplete();
     }
 
     @Test
     public void sampleTimeout() {
+        String[] array = {"one",  "two", "three","foo", "four", "five"};
+        Flux<String> flux = part04Filter.sampleTimeout(Flux.fromArray(array)).log();
+        StepVerifier.create(flux)
+                .expectNext("one","two","three","foo","four","five")
+                .verifyComplete();
+
     }
 
     @Test
     public void single() {
+        String[] array = {"one"};
+        Mono<String> mono = part04Filter.single(Flux.fromArray(array)).log();
+        StepVerifier.create(mono)
+                .expectNext("one")
+                .verifyComplete();
+
     }
 
     @Test
+    public void singleError() {
+        String[] array = {"one","two"};
+        Mono<String> mono = part04Filter.single(Flux.fromArray(array)).log();
+        StepVerifier.create(mono)
+                .expectError(IndexOutOfBoundsException.class)
+                .verify();
+
+    }
+
+
+
+    @Test
     public void singleDefault() {
+        Mono<String> mono = part04Filter.singleDefault(Flux.empty()).log();
+        StepVerifier.create(mono)
+                .expectNext("default")
+                .verifyComplete();
     }
 
     @Test
     public void singleOrEmpty() {
+        Mono<String> mono = part04Filter.singleOrEmpty(Flux.empty()).log();
+        StepVerifier.create(mono)
+                .verifyComplete();
     }
 }

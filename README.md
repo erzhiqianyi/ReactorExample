@@ -1908,114 +1908,410 @@ j
 ##### filter 
 - 使用判断条件过滤 
 ```java
+	public final Mono<T> filter(final Predicate<? super T> tester) {
+		if (this instanceof Fuseable) {
+			return onAssembly(new MonoFilterFuseable<>(this, tester));
+		}
+		return onAssembly(new MonoFilter<>(this, tester));
+	}
+
 ```
+![](svg/filterForMono.svg)
+
+```java
+	public final Flux<T> filter(Predicate<? super T> p) {
+		if (this instanceof Fuseable) {
+			return onAssembly(new FluxFilterFuseable<>(this, p));
+		}
+		return onAssembly(new FluxFilter<>(this, p));
+	}
+```
+![](svg/filterForFlux.svg)
 ##### filterWhen
 - 异步判断
 ```java
+	public final Mono<T> filterWhen(Function<? super T, ? extends Publisher<Boolean>> asyncPredicate) {
+		return onAssembly(new MonoFilterWhen<>(this, asyncPredicate));
+	}
 ```
+![](svg/filterWhenForMono.svg)
+
+```java
+	public final Flux<T> filterWhen(Function<? super T, ? extends Publisher<Boolean>> asyncPredicate,
+			int bufferSize) {
+		return onAssembly(new FluxFilterWhen<>(this, asyncPredicate, bufferSize));
+	}
+```
+![](svg/filterWhenForFlux.svg)
+
 ##### ofType
 - 判断指定类型对象
 ```java
+	public final <U> Mono<U> ofType(final Class<U> clazz) {
+		Objects.requireNonNull(clazz, "clazz");
+		return filter(o -> clazz.isAssignableFrom(o.getClass())).cast(clazz);
+	}
 ```
+![](svg/ofTypeForMono.svg)
+
+```java
+	public final <U> Flux<U> ofType(final Class<U> clazz) {
+			Objects.requireNonNull(clazz, "clazz");
+			return filter(o -> clazz.isAssignableFrom(o.getClass())).cast(clazz);
+	}
+```
+![](svg/ofTypeForFlux.svg)
+
+##### ignoreElement 
+- 忽略所有元素
+```java
+	public final Mono<T> ignoreElement() {
+		return onAssembly(new MonoIgnoreElement<>(this));
+	}
+```
+![](svg/ignoreElementForMono.svg)
+
 ##### ignoreElements 
 - 忽略所有元素
 ```java
+	public final Mono<T> ignoreElements() {
+		return Mono.onAssembly(new MonoIgnoreElements<>(this));
+	}
 ```
+![](svg/ignoreElementsForFlux.svg)
 ##### distinct 
 - 去重 
 ```java
+	public final <V, C> Flux<T> distinct(
+			Function<? super T, ? extends V> keySelector,
+			Supplier<C> distinctStoreSupplier,
+			BiPredicate<C, V> distinctPredicate,
+			Consumer<C> cleanup) {
+		if (this instanceof Fuseable) {
+			return onAssembly(new FluxDistinctFuseable<>(this, keySelector,
+					distinctStoreSupplier, distinctPredicate, cleanup));
+		}
+		return onAssembly(new FluxDistinct<>(this, keySelector, distinctStoreSupplier, distinctPredicate, cleanup));
+	}
 ```
+![](svg/distinct.svg)
 ##### distinctUntilChanged 
 - 去掉连续重复元素
 ```java
+	public final <V> Flux<T> distinctUntilChanged(Function<? super T, ? extends V> keySelector,
+			BiPredicate<? super V, ? super V> keyComparator) {
+		return onAssembly(new FluxDistinctUntilChanged<>(this,
+				keySelector,
+				keyComparator));
+	}
 ```
+![](svg/distinctUntilChanged.svg)
+
 ##### take
 - 从序列第一个元素开始取，取n个 
 ```java
+	public final Flux<T> take(long n) {
+		if (this instanceof Fuseable) {
+			return onAssembly(new FluxTakeFuseable<>(this, n));
+		}
+		return onAssembly(new FluxTake<>(this, n));
+	}
 ``` 
+![](svg/take.svg)
+
 - 取一段时间发出的元素 
 ```java
+	public final Flux<T> take(Duration timespan, Scheduler timer) {
+		if (!timespan.isZero()) {
+			return takeUntilOther(Mono.delay(timespan, timer));
+		}
+		else {
+			return take(0);
+		}
+	}k
 ```
+![](svg/takeWithTimespanForFlux.svg)
+
 ##### next 
 - 取一个元素放到 Mono 中返回
 ```java
+	public final Mono<T> next() {
+		if(this instanceof Callable){
+			@SuppressWarnings("unchecked")
+			Callable<T> m = (Callable<T>)this;
+			return convertToMono(m);
+		}
+		return Mono.onAssembly(new MonoNext<>(this));
+	}j
 ```
+![](svg/next.svg)
+
 ##### limitRequest 
-- 
+- 控制 publisher 生成数量
 ```java
+	public final Flux<T> limitRequest(long requestCap) {
+		return onAssembly(new FluxLimitRequest<>(this, requestCap));
+	}
 ```
+![](svg/limitRequest.svg)
+
 ##### takeLast 
 - 从序列的最后一个元素倒数
 ```java
+	public final Flux<T> takeLast(int n) {
+		if(n == 1){
+			return onAssembly(new FluxTakeLastOne<>(this));
+		}
+		return onAssembly(new FluxTakeLast<>(this, n));
+	}
 ```
-- 取给定序号元素
-```java
-```
+![](svg/takeLast.svg)
+
 ##### takeUntil
 - 直到满足条件时才取元素,基于判断条件
 ```java
+	public final Flux<T> takeUntil(Predicate<? super T> predicate) {
+		return onAssembly(new FluxTakeUntil<>(this, predicate));
+	}
 ```
+![](svg/takeUntil.svg)
+
 ##### takeUntilOther 
 - 直到满足条件时才取元素,基于对 publihser 比较
 ```java
+	public final Flux<T> takeUntilOther(Publisher<?> other) {
+		return onAssembly(new FluxTakeUntilOther<>(this, other));
+	}
 ```
+![](svg/takeUntilOtherForFlux.svg)
+
 ##### elementAt 
 - 取给定序号元素
 ```java
+	public final Mono<T> elementAt(int index) {
+		return Mono.onAssembly(new MonoElementAt<>(this, index));
+	}
 ```
+![](svg/elementAt.svg)
+
 ##### last
 - 如果序列为空则发出错误信号 
 ```java
+    public final Mono<T> last() {
+	    if (this instanceof Callable) {
+		    @SuppressWarnings("unchecked")
+		    Callable<T> thiz = (Callable<T>) this;
+		    Mono<T> callableMono = convertToMono(thiz);
+		    if (callableMono == Mono.empty()) {
+			    return Mono.error(new NoSuchElementException("Flux#last() didn't observe any onNext signal from Callable flux"));
+		    }
+	        return callableMono;
+	    }
+		return Mono.onAssembly(new MonoTakeLastOne<>(this));
+	}
 ```
+![](svg/last.svg)
+
 - 如果序列为空则返回默认值
 ```java
+    public final Mono<T> last(T defaultValue) {
+	    if (this instanceof Callable) {
+		    @SuppressWarnings("unchecked")
+		    Callable<T> thiz = (Callable<T>)this;
+		    if(thiz instanceof Fuseable.ScalarCallable){
+		    	@SuppressWarnings("unchecked")
+			    Fuseable.ScalarCallable<T> c = (Fuseable.ScalarCallable<T>)thiz;
+			    T v;
+			    try {
+				    v = c.call();
+			    }
+			    catch (Exception e) {
+				    return Mono.error(e);
+			    }
+			    if(v == null){
+			    	return Mono.just(defaultValue);
+			    }
+			    return Mono.just(v);
+		    }
+		    Mono.onAssembly(new MonoCallable<>(thiz));
+	    }
+		return Mono.onAssembly(new MonoTakeLastOne<>(this, defaultValue));
+	}
 ```
+![](svg/lastWithDefault.svg)
+
 ##### skip
 - 从序列的第一个元素开始跳过
 ```java
+	public final Flux<T> skip(long skipped) {
+		if (skipped == 0L) {
+			return this;
+		}
+		else {
+			return onAssembly(new FluxSkip<>(this, skipped));
+		}
+	}
 ```
+![](svg/skip.svg)
+
 - 跳过一段时间内发出的元素
 ```java
+	public final Flux<T> skip(Duration timespan) {
+		return skip(timespan, Schedulers.parallel());
+	}
 ```
+![](svg/skipWithTimespan.svg)
+
 ##### skipLast
 - 跳过最后的 n 个元素
 ```java
+	public final Flux<T> skipLast(int n) {
+		if (n == 0) {
+			return this;
+		}
+		return onAssembly(new FluxSkipLast<>(this, n));
+	}
 ```
+![](svg/skipLast.svg)
+
 ##### skipUntil 
 - 直到满足某个条件才跳过(包含 ),基于判断条件 
 ```java
+	public final Flux<T> skipUntil(Predicate<? super T> untilPredicate) {
+		return onAssembly(new FluxSkipUntil<>(this, untilPredicate));
+}
 ```
+![](svg/skipUntil.svg)
+
 ##### skipUntilOther  
 - 直到满足某个条件才跳过(包含),基于对 publisher 的比较
 ```java
+	public final Flux<T> skipUntilOther(Publisher<?> other) {
+		return onAssembly(new FluxSkipUntilOther<>(this, other));
+	}
 ```
+![](svg/skipUntilOther.svg)
+
 ##### skipWhile 
 - 直到满足某个条件（不包含）才跳过
 ```java
+	public final Flux<T> skipWhile(Predicate<? super T> skipPredicate) {
+		return onAssembly(new FluxSkipWhile<>(this, skipPredicate));
+	}
 ```
+![](svg/skipWhile.svg)
+
 ##### sample
 - 给定采样周期
 ```java
+	public final <U> Flux<T> sample(Publisher<U> sampler) {
+		return onAssembly(new FluxSample<>(this, sampler));
+	}
 ```
+![](svg/sampleAtRegularInterval.svg)
+
 - 基于另一个 publisher 采样
 ```java
+	public final <U> Flux<T> sample(Publisher<U> sampler) {
+		return onAssembly(new FluxSample<>(this, sampler));
+	}
+
 ```
+![](svg/sampleWithSampler.svg)
+
 #####  sampleFirst
 - 采样周期里的第一个元素
 ```java
+	public final <U> Flux<T> sampleFirst(Function<? super T, ? extends Publisher<U>> samplerFactory) {
+		return onAssembly(new FluxSampleFirst<>(this, samplerFactory));
+	}
 ```
+![](svg/sampleFirstAtRegularInterval.svg)
+
 ##### sampleTimeout  
 - 基于 publisher 超时
+```java
+	public final <U> Flux<T> sampleTimeout(Function<? super T, ? extends Publisher<U>>
+			throttlerFactory, int maxConcurrency) {
+		return onAssembly(new FluxSampleTimeout<>(this, throttlerFactory,
+				Queues.get(maxConcurrency)));
+	}
+```
+![](svg/sampleTimeoutWithThrottlerFactory.svg)
+
 ##### single 
 - 只要一个元素，为空则发出错误信息，多个返回错误
 ```java
+    public final Mono<T> single() {
+	    if (this instanceof Callable) {
+	        if (this instanceof Fuseable.ScalarCallable) {
+		        @SuppressWarnings("unchecked")
+                Fuseable.ScalarCallable<T> scalarCallable = (Fuseable.ScalarCallable<T>) this;
+
+		        T v;
+		        try {
+			        v = scalarCallable.call();
+		        }
+		        catch (Exception e) {
+			        return Mono.error(e);
+		        }
+		        if (v == null) {
+                    return Mono.error(new NoSuchElementException("Source was a (constant) empty"));
+                }
+                return Mono.just(v);
+	        }
+		    @SuppressWarnings("unchecked")
+		    Callable<T> thiz = (Callable<T>)this;
+		    return Mono.onAssembly(new MonoCallable<>(thiz));
+	    }
+		return Mono.onAssembly(new MonoSingle<>(this));
+	}
+
 ```
+![](svg/singleForFlux.svg)
+
 - 只要一个元素，为空则发出默认值，多个返回错误
 ```java
+    public final Mono<T> single(T defaultValue) {
+        if (this instanceof Callable) {
+            if (this instanceof Fuseable.ScalarCallable) {
+	            @SuppressWarnings("unchecked")
+                Fuseable.ScalarCallable<T> scalarCallable = (Fuseable.ScalarCallable<T>) this;
+
+	            T v;
+	            try {
+		            v = scalarCallable.call();
+	            }
+	            catch (Exception e) {
+		            return Mono.error(e);
+	            }
+	            if (v == null) {
+	                return Mono.just(defaultValue);
+                }
+                return Mono.just(v);
+            }
+	        @SuppressWarnings("unchecked")
+	        Callable<T> thiz = (Callable<T>)this;
+	        return Mono.onAssembly(new MonoCallable<>(thiz));
+        }
+		return Mono.onAssembly(new MonoSingle<>(this, defaultValue, false));
+	}
 ```
+![](svg/singleWithDefault.svg)
+
 - 只要一个元素，为空返回空序列,多个返回错误
 ```java
+    public final Mono<T> singleOrEmpty() {
+	    if (this instanceof Callable) {
+		    @SuppressWarnings("unchecked")
+		    Callable<T> thiz = (Callable<T>)this;
+	        return convertToMono(thiz);
+	    }
+		return Mono.onAssembly(new MonoSingle<>(this, null, true));
+	}
 ```
+![](svg/singleOrEmpty.svg)
+
 #### 错误处理
 #### 基于时间的操作
 #### 拆分 Flux

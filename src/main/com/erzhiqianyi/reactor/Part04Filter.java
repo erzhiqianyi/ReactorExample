@@ -3,7 +3,6 @@ package com.erzhiqianyi.reactor;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -168,57 +167,57 @@ public class Part04Filter {
      * 使用 {@link Flux#skip(Duration)} 跳过一段时间内发出的元素
      */
     Flux<String> skipDuration(Flux<String> flux) {
-        return flux.skip(Duration.of(5,ChronoUnit.SECONDS));
+        return flux.skip(Duration.of(5, ChronoUnit.SECONDS));
     }
 
     /**
-     * 使用 {@link Flux#skipLast(int)} 跳过最后的 n 个元素
+     * 使用 {@link Flux#skipLast(int)} 跳过最后的 n 个元素,跳过后两个元素
      */
     Flux<String> skipLast(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.skipLast(2);
     }
 
 
     /**
-     * 使用 {@link Flux#skipUntil(Predicate)} 直到满足某个条件才跳过(包含 ),基于判断条件
+     * 使用 {@link Flux#skipUntil(Predicate)} 跳过满足条件前的元素(包含条件元素),基于判断条件,
      */
     Flux<String> skipUntil(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.skipUntil(item -> item.equalsIgnoreCase("foo"));
     }
 
     /**
-     * 使用 {@link Flux#skipUntilOther(Publisher)}  直到满足某个条件才跳过(包含),基于对 publisher 的比较
+     * 使用 {@link Flux#skipUntilOther(Publisher)} 跳过满足条件前的元素(包含条件元素) ,基于对 publisher 的比较
      */
     Flux<String> skipUntilOther(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.skipUntilOther(Mono.delay(Duration.of(2, ChronoUnit.SECONDS)));
     }
 
     /**
      * 使用 {@link Flux#skipWhile(Predicate)} 直到满足某个条件（不包含）才跳过
      */
     Flux<String> skipWhile(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.skipWhile(item -> item.equalsIgnoreCase("foo"));
     }
 
     /**
      * 使用 {@link Flux#sample(Duration)}  给定采样周期进行采样
      */
     Flux<String> sampleDuration(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.sample(Duration.ofSeconds(3));
     }
 
     /**
      * 使用 {@link Flux#sample(Publisher)} 基于另一个 publisher 采样
      */
     Flux<String> samplePublisher(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.sample(Flux.just("one", "two", "three"));
     }
 
     /**
      * 使用 {@link Flux#sampleFirst(Duration)}  采样周期里的第一个元素
      */
     Flux<String> sampleFirst(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.sampleFirst(Duration.ofSeconds(2));
     }
 
 
@@ -226,28 +225,28 @@ public class Part04Filter {
      * 使用 {@link Flux#sampleTimeout(Function)}  基于 publisher 超时
      */
     Flux<String> sampleTimeout(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+        return flux.sampleTimeout(s -> Mono.empty(), 1);
     }
 
     /**
      * 使用 {@link Flux#single()} 只要一个元素，为空则发出错误信息，多个返回错误
      */
-    Flux<String> single(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> single(Flux<String> flux) {
+        return flux.single();
     }
 
     /**
      * 使用 {@link Flux#single(Object)}  只要一个元素，为空则发出默认值，多个返回错误
      */
-    Flux<String> singleDefault(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> singleDefault(Flux<String> flux) {
+        return flux.single("default");
     }
 
     /**
      * 使用 {@link Flux#singleOrEmpty()}  只要一个元素，为空返回空序列,多个返回错误
      */
-    Flux<String> singleOrEmpty(Flux<String> flux) {
-        return flux.doOnNext(item -> System.out.println("do on next print value " + item));
+    Mono<String> singleOrEmpty(Flux<String> flux) {
+        return flux.singleOrEmpty();
     }
 
 
