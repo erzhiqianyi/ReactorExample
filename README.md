@@ -113,6 +113,7 @@
 		- [sampleTimeout](#sampleTimeout)
 		- [single](#single)
     - [错误处理](#错误处理)
+		- [error](#error)
     - [基于时间的操作](#基于时间的操作)
     - [拆分Flux](#拆分Flux)
     - [回到同步的世界](#回到同步的世界)
@@ -2320,6 +2321,8 @@ j
 		return onAssembly(new MonoError<>(error));
 	}k
 ```
+![](svg/error.svg)
+
 ```java
 	public static <O> Flux<O> error(Throwable throwable, boolean whenRequested) {
 		if (whenRequested) {
@@ -2330,6 +2333,7 @@ j
 		}
 	}
 ```
+
 - 懒创建：error(Supplier<Throwable>)
 ```java
 
