@@ -6,6 +6,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 
@@ -33,14 +34,60 @@ public class Part05Error {
         return Mono.error(() -> new IllegalStateException());
     }
 
-
     /**
      * 使用 {@link Flux#error(Supplier)} 生成错误,产生 {@link IllegalStateException}
      */
     public Flux<String> fluxErrorSupplier() {
-        return Flux.error( () -> new IllegalStateException());
+        return Flux.error(() -> new IllegalStateException());
     }
 
+    /**
+     * 使用 {@link Mono#onErrorReturn(Object)} 发生异常时返回回调值
+     */
+    public Mono<String> monoOnErrorReturn(Mono<String> mono) {
+        return mono.onErrorReturn("error");
+    }
+
+    /**
+     * 使用 {@link Flux#onErrorReturn(Object)}
+     */
+    public Flux<String> fluxOnErrorReturn(Flux<String> flux) {
+        return flux.onErrorReturn("error");
+    }
+
+    /**
+     * 使用 {@link Mono#onErrorResume(Function)}
+     */
+    public Mono<String> monoOnErrorResume(Mono<String> mono) {
+        return mono.onErrorResume(throwable -> {
+            System.err.println(throwable);
+            return Mono.just("error");
+        });
+    }
+
+    /**
+     * 使用 {@link Flux#onErrorResume(Function)}
+     */
+    public Flux<String> fluxOnErrorResume(Flux<String> flux) {
+       return flux.onErrorResume(throwable -> {
+           System.err.println(throwable);
+           return Mono.just("error");
+       });
+    }
+
+    /**
+     * 使用 {@link Mono#onErrorMap(Function)}
+     */
+    public Mono<String> monoOnErrorMap() {
+        return Mono.error(() -> new IllegalStateException());
+    }
+
+    /**
+     * 使用 {@link Flux#onErrorMap(Function)}
+     */
+    public Mono<String> fluxOnErrorMap() {
+        return Mono.error(() -> new IllegalStateException());
+    }
 
 
     /**
@@ -55,6 +102,34 @@ public class Part05Error {
      */
     public Flux<String> fluxTimeout(Flux<String> flux) {
         return flux.timeout(Duration.ofSeconds(5));
+    }
+
+    /**
+     * 使用 {@link Mono#retry()}
+     */
+    public Mono<String> monoRetry(Mono<String> mono) {
+        return mono.timeout(Duration.ofSeconds(5));
+    }
+
+    /**
+     * 使用 {@link Flux#retry()}
+     */
+    public Mono<String> fluxRetry(Mono<String> mono) {
+        return mono.timeout(Duration.ofSeconds(5));
+    }
+
+    /**
+     * 使用 {@link Mono#retryWhen(Function)}
+     */
+    public Mono<String> monoRetryWhen(Mono<String> mono) {
+        return mono.timeout(Duration.ofSeconds(5));
+    }
+
+    /**
+     * 使用 {@link Flux#retryWhen(Function)}
+     */
+    public Mono<String> fluxRetryWhen(Mono<String> mono) {
+        return mono.timeout(Duration.ofSeconds(5));
     }
 
 

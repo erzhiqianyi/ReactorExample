@@ -114,6 +114,13 @@
 		- [single](#single)
     - [错误处理](#错误处理)
 		- [error](#error)
+		- [onErrorReturn](#onErrorReturn)
+		- [onErrorResume](#onErrorResume)
+		- [onErrorMap](#onErrorMap)
+		- [doFinally](#doFinally)
+		- [timemout](#timemout)
+		- [retry](#retry)
+		- [retryWhen](#retryWhen)
     - [基于时间的操作](#基于时间的操作)
     - [拆分Flux](#拆分Flux)
     - [回到同步的世界](#回到同步的世界)
@@ -2314,6 +2321,7 @@ j
 ![](svg/singleOrEmpty.svg)
 
 #### 错误处理
+
 ##### error
 - 抛出异常：error
 ```java
@@ -2333,22 +2341,60 @@ j
 		}
 	}
 ```
+![](svg/error.svg)
+
 
 - 懒创建：error(Supplier<Throwable>)
 ```java
-
+	public static <T> Mono<T> error(Supplier<Throwable> errorSupplier) {
+		return onAssembly(new MonoErrorSupplied<>(errorSupplier));
+	}
 ```
 
 ```java
+	public static <T> Flux<T> error(Supplier<Throwable> errorSupplier) {
+		return onAssembly(new FluxErrorSupplied<>(errorSupplier));
+	}
 ```
-捕获异常：
-然后返回缺省值：onErrorReturn
-然后返回一个 Flux 或 Mono：onErrorResume
-包装异常后再抛出：.onErrorMap(t -> new RuntimeException(t))
-finally 代码块：doFinally
-Java 7 之后的 try-with-resources 写法：using 工厂方法
-我想从错误中恢复…
+![](svg/errorWithSupplier.svg)
 
+##### onErrorReturn
+- 发生错误时返回默认值
+```java
+	public final Mono<T> onErrorReturn(final T fallback) {
+		return onErrorResume(throwable -> just(fallback));
+	}
+```
+![](svg/onErrorReturnForMono.svg)
+
+```java
+	public final Flux<T> onErrorReturn(T fallbackValue) {
+		return onErrorResume(t -> just(fallbackValue));
+	}
+```
+![](svg/onErrorReturnForFlux.svg)
+
+##### onErrorResume 
+- 发生错误时返回 ```Flux``` 或 ```Mono```
+```java
+public final Mono<T> onErrorResume(Function<? super Throwable, ? extends Mono<? extends
+			T>> fallback) {
+		return onAssembly(new MonoOnErrorResume<>(this, fallback));
+	}
+```
+![](svg/onErrorReturnForMono.svg)
+
+```java
+	public final Flux<T> onErrorResume(Function<? super Throwable, ? extends Publisher<? extends T>> fallback) {
+		return onAssembly(new FluxOnErrorResume<>(this, fallback));
+	}
+```
+![](svg/onErrorResumeForFlux.svg)
+
+
+#####  onErrorMap 
+- 包装异常后再抛出
+#####  doFinally  
 
 #### timemout 
 - 如果元素超时未发出：timeout
@@ -2372,22 +2418,11 @@ Java 7 之后的 try-with-resources 写法：using 工厂方法
 				fallback));
 	}
 ```
-返回一个缺省的：
-的值：onErrorReturn
-Publisher：Flux#onErrorResume 和 Mono#onErrorResume
-重试：retry
-…由一个用于伴随 Flux 触发：retryWhen
+##### retry
+- 重试
+#####  retryWhen
+由一个用于伴随 Flux 触发
 
-- 替换一个已完成的 Flux序列
-```java
-Flux.concat(flux, Flux.error(new IllegalStateException()));
-``` 
-
-- 替换一个已完成的 Mono
-```java
- return mono.then(Mono.error(new IllegalStateException()));
-```
-#
 #### 基于时间的操作
 #### 拆分 Flux
 #### 回到同步的世界
