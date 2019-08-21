@@ -2394,7 +2394,20 @@ public final Mono<T> onErrorResume(Function<? super Throwable, ? extends Mono<? 
 
 #####  onErrorMap 
 - 包装异常后再抛出
-#####  doFinally  
+```java
+	public final Mono<T> onErrorMap(Function<? super Throwable, ? extends Throwable> mapper) {
+		return onErrorResume(e -> Mono.error(mapper.apply(e)));
+	}
+```
+![](svg/onErrorMapForMono.svg)
+
+```java
+	public final Flux<T> onErrorMap(Function<? super Throwable, ? extends Throwable> mapper) {
+		return onErrorResume(e -> Mono.error(mapper.apply(e)));
+	}
+```
+![](svg/onErrorMapForFlux.svg)
+
 
 #### timemout 
 - 如果元素超时未发出：timeout
@@ -2409,6 +2422,7 @@ public final Mono<T> onErrorResume(Function<? super Throwable, ? extends Mono<? 
 		return onAssembly(new MonoTimeout<>(this, _timer, fallback));
 	}
 ```
+![](svg/timeoutFallbackForMono.svg)
 
 ```java
 	public final <U, V> Flux<T> timeout(Publisher<U> firstTimeout,
@@ -2418,8 +2432,27 @@ public final Mono<T> onErrorResume(Function<? super Throwable, ? extends Mono<? 
 				fallback));
 	}
 ```
+![](svg/bufferTimeoutWithMaxSizeAndTimespan.svg)
+
+#####  doFinally  
+- 所有情况结束执行操作 
+
 ##### retry
-- 重试
+- 发生错误后重试
+```java
+	public final Mono<T> retry(long numRetries) {
+		return onAssembly(new MonoRetry<>(this, numRetries));
+	}
+```
+![](svg/retryWithAttemptsForMono.svg)
+
+
+```java
+	public final Flux<T> retry(long numRetries) {
+		return onAssembly(new FluxRetry<>(this, numRetries));
+	}
+```
+![](svg/retryWithAttemptsForFlux.svg)
 #####  retryWhen
 由一个用于伴随 Flux 触发
 
