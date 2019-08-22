@@ -2455,6 +2455,19 @@ public final Mono<T> onErrorResume(Function<? super Throwable, ? extends Mono<? 
 ![](svg/retryWithAttemptsForFlux.svg)
 #####  retryWhen
 由一个用于伴随 Flux 触发
+```java
+	public final Mono<T> retryWhen(Function<Flux<Throwable>, ? extends Publisher<?>> whenFactory) {
+		return onAssembly(new MonoRetryWhen<>(this, whenFactory));
+	}
+```
+![](svg/retryWhenForMono.svg)
+
+```java
+	public final Flux<T> retryWhen(Function<Flux<Throwable>, ? extends Publisher<?>> whenFactory) {
+		return onAssembly(new FluxRetryWhen<>(this, whenFactory));
+	}
+```
+![](svg/retryWhenForFlux.svg)
 
 #### 基于时间的操作
 #### 拆分 Flux

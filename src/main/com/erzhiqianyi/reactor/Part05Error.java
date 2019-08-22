@@ -150,14 +150,14 @@ public class Part05Error {
      * 使用 {@link Mono#retryWhen(Function)}
      */
     public Mono<String> monoRetryWhen(Mono<String> mono) {
-        return mono.timeout(Duration.ofSeconds(5));
+        return  mono.retryWhen(throwableFlux -> null);
     }
 
     /**
      * 使用 {@link Flux#retryWhen(Function)}
      */
-    public Mono<String> fluxRetryWhen(Mono<String> mono) {
-        return mono.timeout(Duration.ofSeconds(5));
+    public Flux<String> fluxRetryWhen(Flux<String> flux) {
+        return flux.retryWhen(throwableFlux -> null);
     }
 
 
